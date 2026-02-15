@@ -4,7 +4,7 @@ using MockMate.Api.Entities;
 
 namespace MockMate.Api.Data.Configurations;
 
-public class RefreshTokenConfigurations : IEntityTypeConfiguration<RefreshToken>
+public class RefreshTokenConfig : IEntityTypeConfiguration<RefreshToken>
 {
     public void Configure(EntityTypeBuilder<RefreshToken> builder)
     {

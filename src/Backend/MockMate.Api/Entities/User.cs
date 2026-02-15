@@ -9,4 +9,6 @@ public sealed class User : IdentityUser<int>
     public DateTime RegisteredAt { get; set; } = DateTime.UtcNow;
     public DateTime? LoggedInAt { get; set; }
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+    public ICollection<InterviewSession> InterviewSessions { get; set; } =
+        new List<InterviewSession>();
 }
