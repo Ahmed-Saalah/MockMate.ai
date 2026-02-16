@@ -1,5 +1,5 @@
 ﻿using System.Reflection;
-using MockMate.Api.Abstractions;
+using MockMate.Api.Abstractions.Shared;
 
 namespace MockMate.Api.Extensions;
 
