@@ -12,6 +12,8 @@ public class InterviewSessionConfig : IEntityTypeConfiguration<InterviewSession>
 
         builder.Property(s => s.Score).HasPrecision(5, 2);
 
+        builder.HasIndex(s => s.UserId);
+
         builder
             .HasMany(s => s.Answers)
             .WithOne(a => a.InterviewSession)

@@ -9,6 +9,7 @@ public class SessionAnswerConfig : IEntityTypeConfiguration<SessionAnswer>
     public void Configure(EntityTypeBuilder<SessionAnswer> builder)
     {
         builder.HasKey(a => a.Id);
+        builder.HasIndex(a => new { a.InterviewSessionId, a.QuestionId }).IsUnique();
 
         builder
             .HasOne(a => a.Question)
