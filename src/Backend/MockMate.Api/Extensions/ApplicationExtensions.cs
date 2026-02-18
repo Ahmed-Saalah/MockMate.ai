@@ -12,4 +12,23 @@ public static class ApplicationExtensions
         services.AddHttpContextAccessor();
         return services;
     }
+
+    public static IServiceCollection AddCorsPolicy(
+        this IServiceCollection services,
+        IConfiguration configuration
+    )
+    {
+        services.AddCors(options =>
+        {
+            options.AddPolicy(
+                "AllowAll",
+                policy =>
+                {
+                    policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+                }
+            );
+        });
+
+        return services;
+    }
 }

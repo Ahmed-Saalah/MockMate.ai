@@ -4,20 +4,10 @@ using MockMate.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(
-        "AllowAll",
-        policy =>
-        {
-            policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
-        }
-    );
-});
-
 builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddIdentityAuth(builder.Configuration);
 builder.Services.AddApplicationServices();
+builder.Services.AddCorsPolicy(builder.Configuration);
 builder.Services.AddSwaggerDocumentation();
 
 var app = builder.Build();
