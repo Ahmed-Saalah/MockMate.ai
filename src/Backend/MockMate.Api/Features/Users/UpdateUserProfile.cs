@@ -19,9 +19,15 @@ public sealed class UpdateUserProfile
         public static implicit operator Response(DomainError error) => new() { Error = error };
     }
 
-    public sealed record ResponseDto(int UserId, string DisplayName, string PhoneNumber);
+    public sealed record ResponseDto(
+        int UserId,
+        string DisplayName,
+        string PhoneNumber,
+        string AvatarPath
+    );
 
-    public sealed record Request(string DisplayName, string PhoneNumber) : IRequest<Response>
+    public sealed record Request(string? DisplayName, string? PhoneNumber, string? AvatarPath)
+        : IRequest<Response>
     {
         [JsonIgnore]
         public string UserId { get; set; } = string.Empty;
@@ -31,12 +37,26 @@ public sealed class UpdateUserProfile
     {
         public Validator()
         {
-            RuleFor(x => x.DisplayName).NotEmpty().MaximumLength(100);
+            RuleFor(x => x)
+                .Must(x =>
+                    x.DisplayName is not null
+                    || x.PhoneNumber is not null
+                    || x.AvatarPath is not null
+                )
+                .WithMessage("At least one field must be provided.");
+
+            RuleFor(x => x.DisplayName)
+                .NotEmpty()
+                .MaximumLength(100)
+                .When(x => x.DisplayName is not null);
 
             RuleFor(x => x.PhoneNumber)
                 .NotEmpty()
                 .Matches(@"^\+\d{1,3}\s\d+$")
-                .WithMessage("Invalid phone number format. Example: +20 1012345678");
+                .WithMessage("Invalid phone number format. Example: +20 1012345678")
+                .When(x => x.PhoneNumber is not null);
+
+            RuleFor(x => x.AvatarPath).NotEmpty().When(x => x.AvatarPath is not null);
         }
     }
 
@@ -46,6 +66,7 @@ public sealed class UpdateUserProfile
         public async Task<Response> Handle(Request request, CancellationToken cancellationToken)
         {
             var validationResult = await validator.ValidateAsync(request, cancellationToken);
+
             if (!validationResult.IsValid)
                 return new ValidationError(validationResult.Errors);
 
@@ -53,11 +74,18 @@ public sealed class UpdateUserProfile
                 return new UnauthorizedError();
 
             var user = await userManager.FindByIdAsync(request.UserId);
+
             if (user is null)
                 return new NotFound();
 
-            user.DisplayName = request.DisplayName;
-            user.PhoneNumber = request.PhoneNumber;
+            if (request.DisplayName is not null)
+                user.DisplayName = request.DisplayName;
+
+            if (request.PhoneNumber is not null)
+                user.PhoneNumber = request.PhoneNumber;
+
+            if (request.AvatarPath is not null)
+                user.AvatarPath = request.AvatarPath;
 
             var result = await userManager.UpdateAsync(user);
 
@@ -67,7 +95,8 @@ public sealed class UpdateUserProfile
             return new ResponseDto(
                 user.Id,
                 user.DisplayName ?? string.Empty,
-                user.PhoneNumber ?? string.Empty
+                user.PhoneNumber ?? string.Empty,
+                user.AvatarPath ?? string.Empty
             );
         }
     }
@@ -83,11 +112,12 @@ public sealed class UpdateUserProfile
                         var userId = user.GetUserId();
 
                         if (string.IsNullOrEmpty(userId))
-                        {
                             return Results.Unauthorized();
-                        }
+
                         request.UserId = userId;
+
                         var response = await mediator.Send(request);
+
                         return response.ToHttpResult();
                     }
                 )
