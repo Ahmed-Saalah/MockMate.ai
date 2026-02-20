@@ -28,8 +28,7 @@ public sealed class CreateUser
         string PhoneNumber,
         string Password,
         string DisplayName,
-        string Role,
-        string? AvatarPath
+        string Role
     ) : IRequest<Response>;
 
     public sealed class Validator : AbstractValidator<Request>
@@ -123,7 +122,6 @@ public sealed class CreateUser
                 Email = request.Email,
                 PhoneNumber = request.PhoneNumber,
                 DisplayName = request.DisplayName,
-                AvatarPath = request.AvatarPath ?? "/images/default-avatar.png",
                 RegisteredAt = DateTime.UtcNow,
             };
 

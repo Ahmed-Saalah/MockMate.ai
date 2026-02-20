@@ -7,10 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 using MockMate.Api.Abstractions.Shared;
 using MockMate.Api.Entities;
 using MockMate.Api.Extensions;
+using MockMate.Api.Services.StorageService;
 
 namespace MockMate.Api.Features.Users;
 
-public sealed class UpdateUserProfile
+public sealed class UpdateProfile
 {
     public sealed class Response : Result<ResponseDto>
     {
@@ -26,7 +27,7 @@ public sealed class UpdateUserProfile
         string AvatarPath
     );
 
-    public sealed record Request(string? DisplayName, string? PhoneNumber, string? AvatarPath)
+    public sealed record Request(string? DisplayName, string? PhoneNumber, IFormFile? Image)
         : IRequest<Response>
     {
         [JsonIgnore]
@@ -39,9 +40,7 @@ public sealed class UpdateUserProfile
         {
             RuleFor(x => x)
                 .Must(x =>
-                    x.DisplayName is not null
-                    || x.PhoneNumber is not null
-                    || x.AvatarPath is not null
+                    x.DisplayName is not null || x.PhoneNumber is not null || x.Image is not null
                 )
                 .WithMessage("At least one field must be provided.");
 
@@ -55,13 +54,14 @@ public sealed class UpdateUserProfile
                 .Matches(@"^\+\d{1,3}\s\d+$")
                 .WithMessage("Invalid phone number format. Example: +20 1012345678")
                 .When(x => x.PhoneNumber is not null);
-
-            RuleFor(x => x.AvatarPath).NotEmpty().When(x => x.AvatarPath is not null);
         }
     }
 
-    public sealed class Handler(UserManager<User> userManager, IValidator<Request> validator)
-        : IRequestHandler<Request, Response>
+    public sealed class Handler(
+        UserManager<User> userManager,
+        IImageStorageService imageStorageService,
+        IValidator<Request> validator
+    ) : IRequestHandler<Request, Response>
     {
         public async Task<Response> Handle(Request request, CancellationToken cancellationToken)
         {
@@ -84,8 +84,15 @@ public sealed class UpdateUserProfile
             if (request.PhoneNumber is not null)
                 user.PhoneNumber = request.PhoneNumber;
 
-            if (request.AvatarPath is not null)
-                user.AvatarPath = request.AvatarPath;
+            if (request.Image is not null && request.Image.Length > 0)
+            {
+                var newAvatarUrl = await imageStorageService.UploadImageAsync(
+                    request.Image,
+                    cancellationToken: cancellationToken
+                );
+
+                user.AvatarPath = newAvatarUrl;
+            }
 
             var result = await userManager.UpdateAsync(user);
 
@@ -107,22 +114,30 @@ public sealed class UpdateUserProfile
         {
             app.MapPut(
                     "/api/users/profile",
-                    async ([FromBody] Request request, IMediator mediator, ClaimsPrincipal user) =>
+                    async (
+                        [FromForm] string? displayName,
+                        [FromForm] string? phoneNumber,
+                        IFormFile? image,
+                        IMediator mediator,
+                        ClaimsPrincipal user
+                    ) =>
                     {
                         var userId = user.GetUserId();
-
                         if (string.IsNullOrEmpty(userId))
                             return Results.Unauthorized();
 
-                        request.UserId = userId;
+                        var request = new Request(displayName, phoneNumber, image)
+                        {
+                            UserId = userId,
+                        };
 
                         var response = await mediator.Send(request);
-
                         return response.ToHttpResult();
                     }
                 )
                 .WithTags("Users")
-                .RequireAuthorization();
+                .RequireAuthorization()
+                .DisableAntiforgery();
         }
     }
 }
