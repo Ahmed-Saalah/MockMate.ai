@@ -68,7 +68,7 @@ public sealed class CreateTrack
                     }
                 )
                 .WithTags("Tracks")
-                .WithDescription("Creates a new track.")
+                .WithDescription("Creates a new track")
                 .RequireAuthorization(Roles.Admin);
         }
     }
