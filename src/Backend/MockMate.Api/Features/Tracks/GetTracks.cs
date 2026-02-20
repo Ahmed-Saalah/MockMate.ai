@@ -72,7 +72,7 @@ public sealed class GetTracks
                     }
                 )
                 .WithTags("Tracks")
-                .RequireAuthorization();
+                .RequireAuthorization("admin");
         }
     }
 }
