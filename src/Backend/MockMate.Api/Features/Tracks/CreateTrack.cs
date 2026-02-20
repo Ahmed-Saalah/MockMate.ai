@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MockMate.Api.Abstractions.Shared;
+using MockMate.Api.Constants;
 using MockMate.Api.Data;
 using MockMate.Api.Entities;
 
@@ -67,7 +68,7 @@ public sealed class CreateTrack
                     }
                 )
                 .WithTags("Tracks")
-                .RequireAuthorization("admin");
+                .RequireAuthorization(Roles.Admin);
         }
     }
 }

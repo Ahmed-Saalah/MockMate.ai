@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using MockMate.Api.Configuration;
+using MockMate.Api.Constants;
 using MockMate.Api.Data;
 using MockMate.Api.Entities;
 using MockMate.Api.Services.JwtService;
@@ -49,7 +50,11 @@ public static class IdentityExtensions
                 };
             });
 
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy(Roles.Admin, policy => policy.RequireRole(Roles.Admin));
+        });
+
         return services;
     }
 }
