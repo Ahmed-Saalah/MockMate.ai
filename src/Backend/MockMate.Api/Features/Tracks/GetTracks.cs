@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MockMate.Api.Abstractions.Shared;
+using MockMate.Api.Constants;
 using MockMate.Api.Data;
 
 namespace MockMate.Api.Features.Tracks;
@@ -72,7 +73,7 @@ public sealed class GetTracks
                     }
                 )
                 .WithTags("Tracks")
-                .RequireAuthorization("admin");
+                .RequireAuthorization(Roles.Admin);
         }
     }
 }
