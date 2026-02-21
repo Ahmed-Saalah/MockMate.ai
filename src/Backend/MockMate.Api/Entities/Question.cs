@@ -3,11 +3,11 @@
 public class Question
 {
     public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
     public string Text { get; set; } = string.Empty;
     public string SeniorityLevel { get; set; } = string.Empty;
     public string QuestionType { get; set; } = string.Empty;
-    public int SkillId { get; set; }
-    public Skill Skill { get; set; } = null!;
+    public ICollection<Skill> Skills { get; set; } = new List<Skill>();
     public int? Judge0LanguageId { get; set; }
     public decimal? TimeLimit { get; set; }
     public int? MemoryLimit { get; set; }

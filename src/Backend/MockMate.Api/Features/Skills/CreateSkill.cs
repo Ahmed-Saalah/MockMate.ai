@@ -11,16 +11,21 @@ namespace MockMate.Api.Features.Skills;
 
 public sealed class CreateSkill
 {
-    public sealed record Response(int Id, string Name, int TrackId);
+    public sealed record Response(int Id, string Name, List<int> TrackIds);
 
-    public sealed record Request(string Name, int TrackId) : IRequest<Result<Response>>;
+    public sealed record Request(string Name, List<int> TrackIds) : IRequest<Result<Response>>;
 
     public sealed class Validator : AbstractValidator<Request>
     {
         public Validator()
         {
             RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
-            RuleFor(x => x.TrackId).GreaterThan(0).WithMessage("A valid TrackId is required.");
+
+            RuleFor(x => x.TrackIds)
+                .NotEmpty()
+                .WithMessage("At least one TrackId must be provided.")
+                .Must(x => x != null && x.All(id => id > 0))
+                .WithMessage("All TrackIds must be valid positive integers.");
         }
     }
 
@@ -34,22 +39,34 @@ public sealed class CreateSkill
         {
             var validationResult = await validator.ValidateAsync(request, cancellationToken);
             if (!validationResult.IsValid)
-                return new ValidationError(validationResult.Errors);
-
-            var trackExists = await dbContext.Tracks.AnyAsync(
-                t => t.Id == request.TrackId,
-                cancellationToken
-            );
-            if (!trackExists)
             {
-                return new BadRequestError("The specified track does not exist.");
+                return new ValidationError(validationResult.Errors);
             }
 
-            var skill = new Skill { Name = request.Name, TrackId = request.TrackId };
+            var skillExists = await dbContext.Skills.AnyAsync(
+                s => s.Name.ToLower() == request.Name.ToLower(),
+                cancellationToken
+            );
+            if (skillExists)
+            {
+                return new BadRequestError("A skill with this name already exists.");
+            }
+
+            var uniqueTrackIds = request.TrackIds.Distinct().ToList();
+            var tracks = await dbContext
+                .Tracks.Where(t => uniqueTrackIds.Contains(t.Id))
+                .ToListAsync(cancellationToken);
+
+            if (tracks.Count != uniqueTrackIds.Count)
+            {
+                return new BadRequestError("One or more specified tracks do not exist.");
+            }
+
+            var skill = new Skill { Name = request.Name, Tracks = tracks };
             dbContext.Skills.Add(skill);
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            return new Response(skill.Id, skill.Name, skill.TrackId);
+            return new Response(skill.Id, skill.Name, tracks.Select(t => t.Id).ToList());
         }
     }
 

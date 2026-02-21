@@ -10,11 +10,10 @@ public class SkillConfig : IEntityTypeConfiguration<Skill>
     {
         builder.HasKey(s => s.Id);
         builder.Property(s => s.Name).IsRequired().HasMaxLength(100);
-        builder.HasIndex(s => new { s.TrackId, s.Name }).IsUnique();
+        builder.HasIndex(s => s.Name).IsUnique();
         builder
             .HasMany(s => s.Questions)
-            .WithOne(q => q.Skill)
-            .HasForeignKey(q => q.SkillId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .WithMany(q => q.Skills)
+            .UsingEntity(j => j.ToTable("QuestionSkills"));
     }
 }
