@@ -13,8 +13,7 @@ public class TrackConfig : IEntityTypeConfiguration<Track>
 
         builder
             .HasMany(t => t.Skills)
-            .WithOne(s => s.Track)
-            .HasForeignKey(s => s.TrackId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .WithMany(s => s.Tracks)
+            .UsingEntity(j => j.ToTable("TrackSkills"));
     }
 }

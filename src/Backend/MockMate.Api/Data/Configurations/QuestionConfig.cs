@@ -9,12 +9,11 @@ public class QuestionConfig : IEntityTypeConfiguration<Question>
     public void Configure(EntityTypeBuilder<Question> builder)
     {
         builder.HasKey(q => q.Id);
-
+        builder.Property(q => q.Title).IsRequired().HasMaxLength(50);
         builder.Property(q => q.Text).IsRequired();
         builder.Property(q => q.SeniorityLevel).IsRequired().HasMaxLength(50);
         builder.Property(q => q.QuestionType).IsRequired().HasMaxLength(20);
         builder.Property(q => q.TimeLimit).HasPrecision(5, 2);
-        builder.HasIndex(q => q.SkillId);
 
         builder
             .HasMany(q => q.Options)
