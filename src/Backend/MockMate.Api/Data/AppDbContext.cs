@@ -13,6 +13,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Track> Tracks { get; set; }
     public DbSet<Skill> Skills { get; set; }
     public DbSet<Question> Questions { get; set; }
+    public DbSet<LanguageTemplate> LanguageTemplates { get; set; }
     public DbSet<TestCase> TestCases { get; set; }
     public DbSet<McqOption> McqOptions { get; set; }
     public DbSet<InterviewSession> InterviewSessions { get; set; }
