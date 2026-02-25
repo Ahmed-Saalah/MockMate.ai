@@ -8,7 +8,7 @@ namespace MockMate.Api.Features.Skills;
 
 public sealed class UpdateSkill
 {
-    public sealed record Response(int Id, string Name);
+    public sealed record Response(int Id, string Name, List<int> TrackIds );
 
     public sealed record Request(int Id, UpdateSkillDto Data)
         : IRequest<Result<Response>>;
@@ -66,7 +66,7 @@ public sealed class UpdateSkill
 
             await context.SaveChangesAsync(cancellationToken);
 
-            return new Response(skill.Id, skill.Name);
+            return new Response(skill.Id, skill.Name , skill.Tracks.Select(t => t.Id).ToList());
         }
     }
 
