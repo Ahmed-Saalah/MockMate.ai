@@ -38,6 +38,8 @@ public sealed class Login
             RuleFor(r => r.Email)
                 .NotEmpty()
                 .WithMessage("Email is required.")
+                .EmailAddress()
+                .WithErrorCode("invalid_email")
                 .MaximumLength(50)
                 .WithMessage("Email must not exceed 50 characters.");
 
@@ -55,8 +57,7 @@ public sealed class Login
         AppDbContext dbContext,
         ITokenService tokenService,
         IHttpContextAccessor httpContextAccessor,
-        UserManager<User> userManager,
-        IValidator<Request> validator
+        UserManager<User> userManager
     ) : IRequestHandler<Request, Result<Response>>
     {
         public async Task<Result<Response>> Handle(
@@ -64,12 +65,6 @@ public sealed class Login
             CancellationToken cancellationToken
         )
         {
-            var validationResult = await validator.ValidateAsync(request, cancellationToken);
-            if (!validationResult.IsValid)
-            {
-                return new ValidationError(validationResult.Errors);
-            }
-
             var user = await userManager.FindByEmailAsync(request.Email);
 
             if (user is null || !await userManager.CheckPasswordAsync(user, request.Password))
