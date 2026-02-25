@@ -1,7 +1,10 @@
 ﻿using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using MockMate.Api.Abstractions.Shared;
+using MockMate.Api.Common.Endpoints;
+using MockMate.Api.Common.Errors;
+using MockMate.Api.Common.Http;
+using MockMate.Api.Common.Results;
 using MockMate.Api.Constants;
 using MockMate.Api.Data;
 
@@ -11,15 +14,13 @@ public sealed class DeleteTrack
 {
     public sealed record Response(int Id, string Name);
 
-    public sealed record Request(int Id)
-        : IRequest<Result<Response>>;
+    public sealed record Request(int Id) : IRequest<Result<Response>>;
 
     public sealed class Validator : AbstractValidator<Request>
     {
         public Validator()
         {
-            RuleFor(x => x.Id)
-                .GreaterThan(0);
+            RuleFor(x => x.Id).GreaterThan(0);
         }
     }
 
@@ -28,17 +29,20 @@ public sealed class DeleteTrack
     {
         public async Task<Result<Response>> Handle(
             Request request,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
             var validationResult = await validator.ValidateAsync(request, cancellationToken);
             if (!validationResult.IsValid)
                 return new ValidationError(validationResult.Errors);
 
-            var track = await dbContext.Tracks
-                .FirstOrDefaultAsync(t => t.Id == request.Id, cancellationToken);
+            var track = await dbContext.Tracks.FirstOrDefaultAsync(
+                t => t.Id == request.Id,
+                cancellationToken
+            );
 
             if (track is null)
-                return new NotFound();
+                return new NotFoundError();
 
             dbContext.Tracks.Remove(track);
             await dbContext.SaveChangesAsync(cancellationToken);
@@ -57,7 +61,8 @@ public sealed class DeleteTrack
                     {
                         var response = await mediator.Send(new Request(id));
                         return response.ToHttpResult();
-                    })
+                    }
+                )
                 .WithTags("Tracks")
                 .WithDescription("Deletes a track")
                 .RequireAuthorization(Roles.Admin);

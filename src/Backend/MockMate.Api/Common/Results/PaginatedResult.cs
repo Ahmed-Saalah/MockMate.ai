@@ -1,4 +1,4 @@
-﻿namespace MockMate.Api.Abstractions.Shared;
+﻿namespace MockMate.Api.Common.Results;
 
 public sealed record PaginatedResult<T>(
     IEnumerable<T> Data,

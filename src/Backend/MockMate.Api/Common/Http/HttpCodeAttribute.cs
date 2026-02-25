@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace MockMate.Api.Abstractions.Shared;
+namespace MockMate.Api.Common.Http;
 
 [AttributeUsage(AttributeTargets.Class)]
 public class HttpCodeAttribute : Attribute

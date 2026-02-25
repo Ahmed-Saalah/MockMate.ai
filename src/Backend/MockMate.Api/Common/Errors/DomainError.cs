@@ -1,4 +1,4 @@
-﻿namespace MockMate.Api.Abstractions.Shared;
+﻿namespace MockMate.Api.Common.Errors;
 
 public interface IDomainError
 {

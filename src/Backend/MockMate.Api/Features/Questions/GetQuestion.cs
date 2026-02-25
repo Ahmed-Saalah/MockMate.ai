@@ -1,6 +1,9 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
-using MockMate.Api.Abstractions.Shared;
+using MockMate.Api.Common.Endpoints;
+using MockMate.Api.Common.Errors;
+using MockMate.Api.Common.Http;
+using MockMate.Api.Common.Results;
 using MockMate.Api.Constants;
 using MockMate.Api.Data;
 
@@ -56,7 +59,7 @@ public sealed class GetQuestion
 
             if (question is null)
             {
-                return new NotFound($"Question with ID {request.Id} was not found.");
+                return new NotFoundError($"Question with ID {request.Id} was not found.");
             }
 
             var response = new Response(

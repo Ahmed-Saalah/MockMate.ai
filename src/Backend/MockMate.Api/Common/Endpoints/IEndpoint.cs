@@ -1,4 +1,4 @@
-﻿namespace MockMate.Api.Abstractions.Shared;
+﻿namespace MockMate.Api.Common.Endpoints;
 
 public interface IEndpoint
 {

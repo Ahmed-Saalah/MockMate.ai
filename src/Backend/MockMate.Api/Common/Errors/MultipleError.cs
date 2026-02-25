@@ -1,6 +1,7 @@
 ﻿using System.Net;
+using MockMate.Api.Common.Http;
 
-namespace MockMate.Api.Abstractions.Shared;
+namespace MockMate.Api.Common.Errors;
 
 [HttpCode(HttpStatusCode.BadRequest)]
 public class MultipleError : DomainError

@@ -1,7 +1,10 @@
 ﻿using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using MockMate.Api.Abstractions.Shared;
+using MockMate.Api.Common.Endpoints;
+using MockMate.Api.Common.Errors;
+using MockMate.Api.Common.Http;
+using MockMate.Api.Common.Results;
 using MockMate.Api.Constants;
 using MockMate.Api.Data;
 
@@ -9,22 +12,15 @@ namespace MockMate.Api.Features.Tracks;
 
 public sealed class GetTrackById
 {
-    public sealed record TrackDto(
-        int Id,
-        string Name,
-        DateTime CreatedAt,
-        int SkillCount
-    );
+    public sealed record TrackDto(int Id, string Name, DateTime CreatedAt, int SkillCount);
 
-    public sealed record Request(int Id)
-        : IRequest<Result<TrackDto>>;
+    public sealed record Request(int Id) : IRequest<Result<TrackDto>>;
 
     public sealed class Validator : AbstractValidator<Request>
     {
         public Validator()
         {
-            RuleFor(x => x.Id)
-                .GreaterThan(0);
+            RuleFor(x => x.Id).GreaterThan(0);
         }
     }
 
@@ -33,25 +29,21 @@ public sealed class GetTrackById
     {
         public async Task<Result<TrackDto>> Handle(
             Request request,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
             var validationResult = await validator.ValidateAsync(request, cancellationToken);
             if (!validationResult.IsValid)
                 return new ValidationError(validationResult.Errors);
 
-            var track = await dbContext.Tracks
-                .AsNoTracking()
+            var track = await dbContext
+                .Tracks.AsNoTracking()
                 .Where(t => t.Id == request.Id)
-                .Select(t => new TrackDto(
-                    t.Id,
-                    t.Name,
-                    t.CreatedAt,
-                    t.Skills.Count
-                ))
+                .Select(t => new TrackDto(t.Id, t.Name, t.CreatedAt, t.Skills.Count))
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (track is null)
-                return new NotFound();
+                return new NotFoundError();
 
             return track;
         }
@@ -67,7 +59,8 @@ public sealed class GetTrackById
                     {
                         var response = await mediator.Send(new Request(id));
                         return response.ToHttpResult();
-                    })
+                    }
+                )
                 .WithTags("Tracks")
                 .WithDescription("Get track by id")
                 .RequireAuthorization(Roles.Admin);

@@ -4,7 +4,10 @@ using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using MockMate.Api.Abstractions.Shared;
+using MockMate.Api.Common.Endpoints;
+using MockMate.Api.Common.Errors;
+using MockMate.Api.Common.Http;
+using MockMate.Api.Common.Results;
 using MockMate.Api.Entities;
 using MockMate.Api.Extensions;
 using MockMate.Api.Services.StorageService;
@@ -76,7 +79,7 @@ public sealed class UpdateProfile
             var user = await userManager.FindByIdAsync(request.UserId);
 
             if (user is null)
-                return new NotFound();
+                return new NotFoundError();
 
             if (request.DisplayName is not null)
                 user.DisplayName = request.DisplayName;

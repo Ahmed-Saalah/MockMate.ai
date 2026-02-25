@@ -2,7 +2,9 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using MockMate.Api.Abstractions.Shared;
+using MockMate.Api.Common.Endpoints;
+using MockMate.Api.Common.Http;
+using MockMate.Api.Common.Results;
 using MockMate.Api.Data;
 
 namespace MockMate.Api.Features.Auth;
