@@ -19,9 +19,7 @@ public sealed class DeleteSkill
             Request request,
             CancellationToken cancellationToken)
         {
-            var skill = await context.Skills.FirstOrDefaultAsync(
-                s => s.Id == request.Id,
-                cancellationToken);
+            var skill = await context.Skills.FindAsync( request.Id  , cancellationToken);
 
             if (skill is null)
             {
