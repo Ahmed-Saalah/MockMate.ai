@@ -1,6 +1,8 @@
 ﻿using MediatR;
-using Microsoft.EntityFrameworkCore;
-using MockMate.Api.Abstractions.Shared;
+using MockMate.Api.Common.Endpoints;
+using MockMate.Api.Common.Errors;
+using MockMate.Api.Common.Http;
+using MockMate.Api.Common.Results;
 using MockMate.Api.Constants;
 using MockMate.Api.Data;
 
@@ -12,18 +14,18 @@ public sealed class DeleteSkill
 
     public sealed record Request(int Id) : IRequest<Result<Response>>;
 
-    public sealed class Handler(AppDbContext context)
-        : IRequestHandler<Request, Result<Response>>
+    public sealed class Handler(AppDbContext context) : IRequestHandler<Request, Result<Response>>
     {
         public async Task<Result<Response>> Handle(
             Request request,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
-            var skill = await context.Skills.FindAsync( request.Id  , cancellationToken);
+            var skill = await context.Skills.FindAsync(request.Id, cancellationToken);
 
             if (skill is null)
             {
-                return new NotFound($"Skill with ID {request.Id} was not found.");
+                return new NotFoundError($"Skill with ID {request.Id} was not found.");
             }
 
             context.Skills.Remove(skill);

@@ -1,7 +1,8 @@
 ﻿using System.Net;
 using Microsoft.AspNetCore.Identity;
+using MockMate.Api.Common.Http;
 
-namespace MockMate.Api.Abstractions.Shared;
+namespace MockMate.Api.Common.Errors;
 
 [HttpCode(HttpStatusCode.BadRequest)]
 public class ValidationError : DomainError

@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using Microsoft.Extensions.Configuration;
 using MockMate.Api.Configuration;
 using MockMate.Api.Services.StorageService;
 

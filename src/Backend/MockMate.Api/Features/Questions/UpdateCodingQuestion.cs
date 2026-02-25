@@ -2,7 +2,10 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using MockMate.Api.Abstractions.Shared;
+using MockMate.Api.Common.Endpoints;
+using MockMate.Api.Common.Errors;
+using MockMate.Api.Common.Http;
+using MockMate.Api.Common.Results;
 using MockMate.Api.Constants;
 using MockMate.Api.Data;
 using MockMate.Api.Entities;
@@ -74,7 +77,7 @@ public sealed class UpdateCodingQuestion
 
             if (question is null || question.QuestionType != QuestionType.Coding)
             {
-                return new NotFound("Coding Question not found.");
+                return new NotFoundError("Coding Question not found.");
             }
 
             question.Title = request.Data.Title;

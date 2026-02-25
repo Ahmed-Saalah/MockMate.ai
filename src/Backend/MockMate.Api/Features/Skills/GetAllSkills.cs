@@ -1,8 +1,12 @@
 ﻿using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using MockMate.Api.Abstractions.Shared;
+using MockMate.Api.Common.Endpoints;
+using MockMate.Api.Common.Errors;
+using MockMate.Api.Common.Http;
+using MockMate.Api.Common.Results;
 using MockMate.Api.Data;
+
 namespace MockMate.Api.Features.Skills;
 
 public sealed class GetAllSkills
@@ -23,8 +27,7 @@ public sealed class GetAllSkills
     {
         public Validator()
         {
-            RuleFor(x => x.SkillName)
-                .MaximumLength(100);
+            RuleFor(x => x.SkillName).MaximumLength(100);
         }
     }
 
@@ -33,11 +36,10 @@ public sealed class GetAllSkills
     // =====================================
     public sealed class Response : Result<List<ResponseDto>>
     {
-        public static implicit operator Response(List<ResponseDto> value)
-            => new() { Value = value };
+        public static implicit operator Response(List<ResponseDto> value) =>
+            new() { Value = value };
 
-        public static implicit operator Response(DomainError error)
-            => new() { Error = error };
+        public static implicit operator Response(DomainError error) => new() { Error = error };
     }
 
     // =====================================
@@ -63,28 +65,20 @@ public sealed class GetAllSkills
 
         public async Task<Response> Handle(Query request, CancellationToken cancellationToken)
         {
-            var query = _context.Skills
-                .AsNoTracking()
-                .AsQueryable();
+            var query = _context.Skills.AsNoTracking().AsQueryable();
 
             if (request.TrackId is not null)
             {
-                query = query.Where(s =>
-                    s.Tracks.Any(t => t.Id == request.TrackId));
+                query = query.Where(s => s.Tracks.Any(t => t.Id == request.TrackId));
             }
 
             if (!string.IsNullOrWhiteSpace(request.SkillName))
             {
-                query = query.Where(s =>
-                    s.Name.StartsWith(request.SkillName));
+                query = query.Where(s => s.Name.StartsWith(request.SkillName));
             }
 
             var skills = await query
-                .Select(s => new ResponseDto
-                {
-                    Id = s.Id,
-                    Name = s.Name
-                })
+                .Select(s => new ResponseDto { Id = s.Id, Name = s.Name })
                 .ToListAsync(cancellationToken);
 
             return skills;
@@ -100,13 +94,13 @@ public sealed class GetAllSkills
         public void Map(IEndpointRouteBuilder app)
         {
             app.MapGet(
-                "/api/skills",
-                async (int? trackId, string? skillName, IMediator mediator) =>
+                    "/api/skills",
+                    async (int? trackId, string? skillName, IMediator mediator) =>
                     {
                         var request = new GetAllSkills.Query
                         {
                             TrackId = trackId,
-                            SkillName = skillName
+                            SkillName = skillName,
                         };
 
                         var response = await mediator.Send(request);

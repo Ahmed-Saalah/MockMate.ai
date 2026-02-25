@@ -1,7 +1,10 @@
 ﻿using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using MockMate.Api.Abstractions.Shared;
+using MockMate.Api.Common.Endpoints;
+using MockMate.Api.Common.Errors;
+using MockMate.Api.Common.Http;
+using MockMate.Api.Common.Results;
 using MockMate.Api.Constants;
 using MockMate.Api.Data;
 
@@ -11,19 +14,15 @@ public sealed class UpdateTrack
 {
     public sealed record Response(int Id, string Name, DateTime CreatedAt);
 
-    public sealed record Request(int Id, string Name)
-        : IRequest<Result<Response>>;
+    public sealed record Request(int Id, string Name) : IRequest<Result<Response>>;
 
     public sealed class Validator : AbstractValidator<Request>
     {
         public Validator()
         {
-            RuleFor(x => x.Id)
-                .GreaterThan(0);
+            RuleFor(x => x.Id).GreaterThan(0);
 
-            RuleFor(x => x.Name)
-                .NotEmpty()
-                .MaximumLength(100);
+            RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
         }
     }
 
@@ -32,22 +31,27 @@ public sealed class UpdateTrack
     {
         public async Task<Result<Response>> Handle(
             Request request,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
             var validationResult = await validator.ValidateAsync(request, cancellationToken);
             if (!validationResult.IsValid)
                 return new ValidationError(validationResult.Errors);
 
-            var track = await dbContext.Tracks
-                .FirstOrDefaultAsync(t => t.Id == request.Id, cancellationToken);
+            var track = await dbContext.Tracks.FirstOrDefaultAsync(
+                t => t.Id == request.Id,
+                cancellationToken
+            );
 
             if (track is null)
-                return new NotFound();
+                return new NotFoundError();
 
             var normalizedName = request.Name.Trim();
 
-            var nameExists = await dbContext.Tracks
-                .AnyAsync(t => t.Name == normalizedName && t.Id != request.Id, cancellationToken);
+            var nameExists = await dbContext.Tracks.AnyAsync(
+                t => t.Name == normalizedName && t.Id != request.Id,
+                cancellationToken
+            );
 
             if (nameExists)
                 return new ConflictError("A track with this name already exists.");
@@ -70,7 +74,8 @@ public sealed class UpdateTrack
                     {
                         var response = await mediator.Send(new Request(id, name));
                         return response.ToHttpResult();
-                    })
+                    }
+                )
                 .WithTags("Tracks")
                 .WithDescription("Updates track name")
                 .RequireAuthorization(Roles.Admin);

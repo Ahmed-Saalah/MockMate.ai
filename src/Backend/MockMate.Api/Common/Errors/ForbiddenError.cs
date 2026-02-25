@@ -1,6 +1,7 @@
 ﻿using System.Net;
+using MockMate.Api.Common.Http;
 
-namespace MockMate.Api.Abstractions.Shared;
+namespace MockMate.Api.Common.Errors;
 
 [HttpCode(HttpStatusCode.Forbidden)]
 public sealed class ForbiddenError(string message = "Forbidden") : DomainError

@@ -1,4 +1,6 @@
-﻿namespace MockMate.Api.Abstractions.Shared;
+﻿using MockMate.Api.Common.Errors;
+
+namespace MockMate.Api.Common.Results;
 
 public class Result<T>
 {
