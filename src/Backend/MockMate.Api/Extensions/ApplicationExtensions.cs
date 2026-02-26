@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using MockMate.Api.Common.Behaviors;
 using MockMate.Api.Configuration;
 using MockMate.Api.Services.StorageService;
 
@@ -12,7 +13,11 @@ public static class ApplicationExtensions
     )
     {
         var assembly = typeof(Program).Assembly;
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(assembly));
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(assembly);
+            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+        });
         services.AddValidatorsFromAssembly(assembly);
         services.Configure<CloudinaryOptions>(
             configuration.GetSection(CloudinaryOptions.SectionName)
