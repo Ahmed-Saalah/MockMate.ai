@@ -1,4 +1,4 @@
-VALID_LEVELS = ["Beginner", "Intermediate", "Advanced"]
+VALID_LEVELS = ["Junior", "Mid-level", "Senior"]
 
 def validate_output(data: dict) -> dict:
     if not isinstance(data, dict):
@@ -13,7 +13,15 @@ def validate_output(data: dict) -> dict:
     if not isinstance(data.get("technical_skills"), list):
         data["technical_skills"] = []
 
-    # Remove duplicates
-    data["technical_skills"] = list(set(data["technical_skills"]))
+    seen = set()
+    unique_skills = []
+
+    for skill in data["technical_skills"]:
+        if skill not in seen:
+            seen.add(skill)
+            unique_skills.append(skill)
+
+    data["technical_skills"] = unique_skills
+
 
     return data

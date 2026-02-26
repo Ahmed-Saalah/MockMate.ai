@@ -12,7 +12,7 @@ app = FastAPI(title="CV AI Analyzer Service")
 @app.post("/analyze")
 async def analyze_resume(
     cv_file: UploadFile = File(...),
-    job_title: str = Form(None)
+    job_description: str = Form(None)
 ):
     try:
         logging.info("Receiving CV file...")
@@ -33,7 +33,7 @@ async def analyze_resume(
             raise HTTPException(status_code=400, detail="Empty CV text.")
 
         # Run analysis
-        result = run_resume_analysis(cv_text, job_title)
+        result = run_resume_analysis(cv_text, job_description)
 
         return {
             "status": "success",
