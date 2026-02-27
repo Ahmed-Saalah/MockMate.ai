@@ -149,7 +149,7 @@ public sealed class CreateInterview
                 app.MapPost(
                         "/interview-sessions",
                         async (
-                            IFormFile cvFile,
+                            [FromForm] IFormFile cvFile,
                             [FromForm] string? jobDescription,
                             IMediator mediator,
                             ClaimsPrincipal user
