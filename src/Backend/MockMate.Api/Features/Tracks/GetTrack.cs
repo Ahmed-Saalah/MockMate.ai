@@ -24,7 +24,7 @@ public sealed class GetTrackById
         }
     }
 
-    public sealed class Handler(AppDbContext dbContext, IValidator<Request> validator)
+    public sealed class Handler(AppDbContext dbContext )
         : IRequestHandler<Request, Result<TrackDto>>
     {
         public async Task<Result<TrackDto>> Handle(
@@ -32,10 +32,6 @@ public sealed class GetTrackById
             CancellationToken cancellationToken
         )
         {
-            var validationResult = await validator.ValidateAsync(request, cancellationToken);
-            if (!validationResult.IsValid)
-                return new ValidationError(validationResult.Errors);
-
             var track = await dbContext
                 .Tracks.AsNoTracking()
                 .Where(t => t.Id == request.Id)

@@ -117,7 +117,7 @@ public sealed class CreateCodingQuestion
         }
     }
 
-    public sealed class Handler(AppDbContext context, IValidator<Request> validator)
+    public sealed class Handler(AppDbContext context )
         : IRequestHandler<Request, Result<Response>>
     {
         public async Task<Result<Response>> Handle(
@@ -125,12 +125,6 @@ public sealed class CreateCodingQuestion
             CancellationToken cancellationToken
         )
         {
-            var validationResult = await validator.ValidateAsync(request, cancellationToken);
-            if (!validationResult.IsValid)
-            {
-                return new ValidationError(validationResult.Errors);
-            }
-
             var uniqueSkillIds = request.SkillIds.Distinct().ToList();
             var skills = await context
                 .Skills.Where(s => uniqueSkillIds.Contains(s.Id))

@@ -62,17 +62,11 @@ public sealed class UpdateProfile
 
     public sealed class Handler(
         UserManager<User> userManager,
-        IImageStorageService imageStorageService,
-        IValidator<Request> validator
+        IImageStorageService imageStorageService
     ) : IRequestHandler<Request, Response>
     {
         public async Task<Response> Handle(Request request, CancellationToken cancellationToken)
         {
-            var validationResult = await validator.ValidateAsync(request, cancellationToken);
-
-            if (!validationResult.IsValid)
-                return new ValidationError(validationResult.Errors);
-
             if (string.IsNullOrWhiteSpace(request.UserId))
                 return new UnauthorizedError();
 

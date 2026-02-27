@@ -55,7 +55,7 @@ public sealed class UpdateCodingQuestion
         }
     }
 
-    public sealed class Handler(AppDbContext context, IValidator<Request> validator)
+    public sealed class Handler(AppDbContext context )
         : IRequestHandler<Request, Result<Response>>
     {
         public async Task<Result<Response>> Handle(
@@ -63,12 +63,6 @@ public sealed class UpdateCodingQuestion
             CancellationToken cancellationToken
         )
         {
-            var validationResult = await validator.ValidateAsync(request, cancellationToken);
-            if (!validationResult.IsValid)
-            {
-                return new ValidationError(validationResult.Errors);
-            }
-
             var question = await context
                 .Questions.Include(q => q.Skills)
                 .Include(q => q.Templates)

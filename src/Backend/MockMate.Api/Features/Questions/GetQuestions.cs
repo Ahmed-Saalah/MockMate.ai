@@ -39,7 +39,7 @@ public sealed class GetQuestions
         }
     }
 
-    public sealed class Handler(AppDbContext context, IValidator<Request> validator)
+    public sealed class Handler(AppDbContext context)
         : IRequestHandler<Request, Result<PaginatedResult<QuestionSummaryDto>>>
     {
         public async Task<Result<PaginatedResult<QuestionSummaryDto>>> Handle(
@@ -47,11 +47,6 @@ public sealed class GetQuestions
             CancellationToken cancellationToken
         )
         {
-            var validationResult = await validator.ValidateAsync(request, cancellationToken);
-            if (!validationResult.IsValid)
-            {
-                return new ValidationError(validationResult.Errors);
-            }
 
             var query = context.Questions.AsNoTracking().Include(q => q.Skills).AsQueryable();
 

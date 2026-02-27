@@ -30,7 +30,7 @@ public sealed class CreateTrack
         }
     }
 
-    public sealed class Handler(AppDbContext dbContext, IValidator<Request> validator)
+    public sealed class Handler(AppDbContext dbContext )
         : IRequestHandler<Request, Result<Response>>
     {
         public async Task<Result<Response>> Handle(
@@ -38,11 +38,6 @@ public sealed class CreateTrack
             CancellationToken cancellationToken
         )
         {
-            var validationResult = await validator.ValidateAsync(request, cancellationToken);
-            if (!validationResult.IsValid)
-            {
-                return new ValidationError(validationResult.Errors);
-            }
 
             if (await dbContext.Tracks.AnyAsync(t => t.Name == request.Name, cancellationToken))
             {

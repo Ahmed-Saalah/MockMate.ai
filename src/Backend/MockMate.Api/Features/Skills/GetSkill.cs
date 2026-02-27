@@ -25,7 +25,7 @@ public sealed class GetSkill
         }
     }
 
-    public sealed class Handler(AppDbContext context, IValidator<Request> validator)
+    public sealed class Handler(AppDbContext context )
         : IRequestHandler<Request, Result<ResponseDto>>
     {
         public async Task<Result<ResponseDto>> Handle(
@@ -33,11 +33,6 @@ public sealed class GetSkill
             CancellationToken cancellationToken
         )
         {
-            var validationResult = await validator.ValidateAsync(request, cancellationToken);
-
-            if (!validationResult.IsValid)
-                return new ValidationError(validationResult.Errors);
-
             var skill = await context
                 .Skills.AsNoTracking()
                 .Where(s => s.Id == request.Id)
