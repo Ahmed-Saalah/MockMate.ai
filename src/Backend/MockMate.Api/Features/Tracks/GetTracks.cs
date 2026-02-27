@@ -26,7 +26,7 @@ public sealed class GetTracks
         }
     }
 
-    public sealed class Handler(AppDbContext dbContext, IValidator<Request> validator)
+    public sealed class Handler(AppDbContext dbContext)
         : IRequestHandler<Request, Result<PaginatedResult<TrackDto>>>
     {
         public async Task<Result<PaginatedResult<TrackDto>>> Handle(
@@ -34,10 +34,6 @@ public sealed class GetTracks
             CancellationToken cancellationToken
         )
         {
-            var validationResult = await validator.ValidateAsync(request, cancellationToken);
-            if (!validationResult.IsValid)
-                return new ValidationError(validationResult.Errors);
-
             var query = dbContext.Tracks.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))

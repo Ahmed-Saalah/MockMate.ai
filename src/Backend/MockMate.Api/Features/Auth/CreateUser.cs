@@ -106,19 +106,11 @@ public sealed class CreateUser
     public sealed class Handler(
         UserManager<User> userManager,
         ITokenService tokenService,
-        IValidator<Request> validator,
         IHttpContextAccessor httpContextAccessor
     ) : IRequestHandler<Request, Response>
     {
         public async Task<Response> Handle(Request request, CancellationToken cancellationToken)
         {
-            var validationResult = await validator.ValidateAsync(request, cancellationToken);
-
-            if (!validationResult.IsValid)
-            {
-                return new ValidationError(validationResult.Errors);
-            }
-
             var user = new User
             {
                 UserName = request.Username,

@@ -32,7 +32,7 @@ public sealed class CreateSkill
         }
     }
 
-    public sealed class Handler(AppDbContext dbContext, IValidator<Request> validator)
+    public sealed class Handler(AppDbContext dbContext )
         : IRequestHandler<Request, Result<Response>>
     {
         public async Task<Result<Response>> Handle(
@@ -40,12 +40,6 @@ public sealed class CreateSkill
             CancellationToken cancellationToken
         )
         {
-            var validationResult = await validator.ValidateAsync(request, cancellationToken);
-            if (!validationResult.IsValid)
-            {
-                return new ValidationError(validationResult.Errors);
-            }
-
             var skillExists = await dbContext.Skills.AnyAsync(
                 s => s.Name.ToLower() == request.Name.ToLower(),
                 cancellationToken

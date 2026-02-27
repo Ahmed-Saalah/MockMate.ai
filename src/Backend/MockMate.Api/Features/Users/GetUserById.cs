@@ -38,15 +38,11 @@ public sealed class GetUserById
         }
     }
 
-    public sealed class Handler(AppDbContext context, IValidator<Request> validator)
+    public sealed class Handler(AppDbContext context)
         : IRequestHandler<Request, Response>
     {
         public async Task<Response> Handle(Request request, CancellationToken cancellationToken)
         {
-            var validationResult = await validator.ValidateAsync(request, cancellationToken);
-
-            if (!validationResult.IsValid)
-                return new ValidationError(validationResult.Errors);
             var response = await context
                 .Users.Where(u => u.Id == request.Id)
                 .Select(u => new ResponseDto(

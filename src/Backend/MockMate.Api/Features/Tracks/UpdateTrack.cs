@@ -26,7 +26,7 @@ public sealed class UpdateTrack
         }
     }
 
-    public sealed class Handler(AppDbContext dbContext, IValidator<Request> validator)
+    public sealed class Handler(AppDbContext dbContext )
         : IRequestHandler<Request, Result<Response>>
     {
         public async Task<Result<Response>> Handle(
@@ -34,10 +34,6 @@ public sealed class UpdateTrack
             CancellationToken cancellationToken
         )
         {
-            var validationResult = await validator.ValidateAsync(request, cancellationToken);
-            if (!validationResult.IsValid)
-                return new ValidationError(validationResult.Errors);
-
             var track = await dbContext.Tracks.FirstOrDefaultAsync(
                 t => t.Id == request.Id,
                 cancellationToken
