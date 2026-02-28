@@ -9,6 +9,7 @@ using MockMate.Api.Common.Results;
 using MockMate.Api.Constants;
 using MockMate.Api.Data;
 using MockMate.Api.Entities;
+using MockMate.Api.Helpers;
 
 namespace MockMate.Api.Features.Skills;
 
@@ -32,16 +33,16 @@ public sealed class CreateSkill
         }
     }
 
-    public sealed class Handler(AppDbContext dbContext )
-        : IRequestHandler<Request, Result<Response>>
+    public sealed class Handler(AppDbContext dbContext) : IRequestHandler<Request, Result<Response>>
     {
         public async Task<Result<Response>> Handle(
             Request request,
             CancellationToken cancellationToken
         )
         {
+            var newNormalizedName = SkillNormalizer.Normalize(request.Name);
             var skillExists = await dbContext.Skills.AnyAsync(
-                s => s.Name.ToLower() == request.Name.ToLower(),
+                s => s.NormalizedName == newNormalizedName,
                 cancellationToken
             );
             if (skillExists)
@@ -59,7 +60,13 @@ public sealed class CreateSkill
                 return new BadRequestError("One or more specified tracks do not exist.");
             }
 
-            var skill = new Skill { Name = request.Name, Tracks = tracks };
+            var skill = new Skill
+            {
+                Name = request.Name.Trim(),
+                NormalizedName = newNormalizedName,
+                Tracks = tracks,
+            };
+
             dbContext.Skills.Add(skill);
             await dbContext.SaveChangesAsync(cancellationToken);
 

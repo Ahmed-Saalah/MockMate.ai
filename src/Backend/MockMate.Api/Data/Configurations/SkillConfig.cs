@@ -10,7 +10,9 @@ public class SkillConfig : IEntityTypeConfiguration<Skill>
     {
         builder.HasKey(s => s.Id);
         builder.Property(s => s.Name).IsRequired().HasMaxLength(100);
-        builder.HasIndex(s => s.Name).IsUnique();
+        builder.Property(s => s.NormalizedName).IsRequired().HasMaxLength(100);
+        builder.HasIndex(s => s.NormalizedName).IsUnique();
+
         builder
             .HasMany(s => s.Questions)
             .WithMany(q => q.Skills)
