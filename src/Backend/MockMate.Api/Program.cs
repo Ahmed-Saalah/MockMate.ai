@@ -8,6 +8,7 @@ builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddIdentityAuth(builder.Configuration);
 builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddCorsPolicy(builder.Configuration);
+builder.Services.AddExternalHttpClients(builder.Configuration);
 builder.Services.AddSwaggerDocumentation();
 
 var app = builder.Build();
