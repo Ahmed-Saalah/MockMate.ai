@@ -16,9 +16,9 @@ public class AiServiceClient(HttpClient httpClient, ILogger<AiServiceClient> log
         {
             using var content = new MultipartFormDataContent();
 
-            var pdfContent = new StreamContent(request.Resume);
+            var pdfContent = new StreamContent(request.CV);
             pdfContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
-            content.Add(pdfContent, "cv_file", "resume.pdf");
+            content.Add(pdfContent, "cv_file", "cv.pdf");
 
             var jobDescContent = new StringContent(request.JobDescription);
             content.Add(jobDescContent, "job_description");

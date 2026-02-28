@@ -7,12 +7,14 @@ using Microsoft.EntityFrameworkCore;
 using MockMate.Api.Clients.AiService.Dtos;
 using MockMate.Api.Clients.AiService.Interfaces;
 using MockMate.Api.Common.Endpoints;
+using MockMate.Api.Common.Errors;
 using MockMate.Api.Common.Http;
 using MockMate.Api.Common.Results;
 using MockMate.Api.Constants;
 using MockMate.Api.Data;
 using MockMate.Api.Entities;
 using MockMate.Api.Extensions;
+using MockMate.Api.Helpers;
 
 namespace MockMate.Api.Features.InterviewSessions;
 
@@ -82,47 +84,70 @@ public sealed class CreateInterview
                 aiRequest,
                 cancellationToken
             );
+            if (aiResponse?.Data is null)
+            {
+                return new BadRequestError(
+                    "Failed to extract profile data. Please ensure the CV is a valid, text-readable PDF and try again."
+                );
+            }
 
-            var detectedSkills = aiResponse.Data.TechnicalSkills;
+            var detectedTrack = aiResponse.Data.TrackName?.ToLower().Trim();
             var detectedLevel = aiResponse.Data.Level;
+            var detectedSkills = aiResponse
+                .Data.TechnicalSkills.Where(s => !string.IsNullOrWhiteSpace(s))
+                .Select(SkillNormalizer.Normalize)
+                .ToList();
 
-            var baseQuery = context
+            var seniorityFallbackOrder = GetSeniorityFallbackOrder(detectedLevel);
+
+            const int totalMcqNeeded = 10;
+            const int totalCodingNeeded = 2;
+
+            var mcqBaseQuery = context
                 .Questions.AsNoTracking()
+                .Where(q => q.QuestionType == QuestionType.MCQ)
                 .Where(q =>
-                    q.SeniorityLevel == detectedLevel
-                    && q.Skills.Any(s => detectedSkills.Contains(s.Name))
+                    q.Skills.Any(s => s.Tracks.Any(t => t.Name.ToLower() == detectedTrack))
+                    && q.Skills.Any(s => detectedSkills.Contains(s.NormalizedName))
                 );
 
-            var mcqQuestions = await baseQuery
-                .Where(q => q.QuestionType == QuestionType.MCQ)
-                .OrderBy(q => EF.Functions.Random())
-                .Take(5)
-                .Select(q => new McqQuestionDto(
-                    q.Id,
-                    q.Text,
-                    q.Options.Select(o => new McqOptionsDto(o.Id, o.OptionText)).ToList()
-                ))
-                .ToListAsync(cancellationToken);
+            var codingBaseQuery = context
+                .Questions.AsNoTracking()
+                .Where(q => q.QuestionType == QuestionType.Coding);
 
-            var codingQuestions = await baseQuery
-                .Where(q => q.QuestionType == QuestionType.Coding)
-                .OrderBy(q => EF.Functions.Random())
-                .Take(2)
-                .Select(q => new CodingQuestionDto(
-                    q.Id,
-                    q.Title,
-                    q.Text,
-                    q.TestCases.Where(tc => !tc.IsHidden)
-                        .Select(tc => new TestCaseDto(tc.Id, tc.Input, tc.Output))
-                        .ToList(),
-                    q.Templates.Select(t => new CodingQuestionTemplateDto(
-                            t.LanguageId,
-                            Judge0Languages.GetName(t.LanguageId),
-                            t.DefaultCode
-                        ))
-                        .ToList()
-                ))
-                .ToListAsync(cancellationToken);
+            var mcqQuestions = new List<McqQuestionDto>();
+            foreach (var level in seniorityFallbackOrder)
+            {
+                if (mcqQuestions.Count >= totalMcqNeeded)
+                    break;
+                int neededCount = totalMcqNeeded - mcqQuestions.Count;
+
+                var fetched = await GetMcqProjection(
+                        mcqBaseQuery.Where(q => q.SeniorityLevel == level)
+                    )
+                    .Take(neededCount)
+                    .ToListAsync(cancellationToken);
+
+                mcqQuestions.AddRange(fetched);
+            }
+
+            var codingQuestions = new List<CodingQuestionDto>();
+            foreach (var level in seniorityFallbackOrder)
+            {
+                if (codingQuestions.Count >= totalCodingNeeded)
+                {
+                    break;
+                }
+                int neededCount = totalCodingNeeded - codingQuestions.Count;
+
+                var fetched = await GetCodingProjection(
+                        codingBaseQuery.Where(q => q.SeniorityLevel == level)
+                    )
+                    .Take(neededCount)
+                    .ToListAsync(cancellationToken);
+
+                codingQuestions.AddRange(fetched);
+            }
 
             var session = new InterviewSession
             {
@@ -142,32 +167,89 @@ public sealed class CreateInterview
             return new Response(session.Id, mcqQuestions, codingQuestions);
         }
 
-        public sealed class Endpoint : IEndpoint
-        {
-            public void Map(IEndpointRouteBuilder app)
-            {
-                app.MapPost(
-                        "/interview-sessions",
-                        async (
-                            [FromForm] IFormFile cvFile,
-                            [FromForm] string? jobDescription,
-                            IMediator mediator,
-                            ClaimsPrincipal user
-                        ) =>
-                        {
-                            var userId = user.GetUserId();
-                            if (string.IsNullOrEmpty(userId))
-                                return Results.Unauthorized();
+        private static IQueryable<McqQuestionDto> GetMcqProjection(IQueryable<Question> query) =>
+            query
+                .Where(q => q.QuestionType == QuestionType.MCQ)
+                .OrderBy(q => EF.Functions.Random())
+                .Select(q => new McqQuestionDto(
+                    q.Id,
+                    q.Text,
+                    q.Options.Select(o => new McqOptionsDto(o.Id, o.OptionText)).ToList()
+                ))
+                .AsSplitQuery();
 
-                            var request = new Request(cvFile, jobDescription) { UserId = userId };
-                            var response = await mediator.Send(request);
-                            return response.ToHttpResult();
-                        }
-                    )
-                    .WithTags("Interviews")
-                    .RequireAuthorization()
-                    .DisableAntiforgery();
-            }
+        private static IQueryable<CodingQuestionDto> GetCodingProjection(
+            IQueryable<Question> query
+        ) =>
+            query
+                .Where(q => q.QuestionType == QuestionType.Coding)
+                .OrderBy(q => EF.Functions.Random())
+                .Select(q => new CodingQuestionDto(
+                    q.Id,
+                    q.Title,
+                    q.Text,
+                    q.TestCases.Where(tc => !tc.IsHidden)
+                        .Select(tc => new TestCaseDto(tc.Id, tc.Input, tc.Output))
+                        .ToList(),
+                    q.Templates.Select(t => new CodingQuestionTemplateDto(
+                            t.LanguageId,
+                            Judge0Languages.GetName(t.LanguageId),
+                            t.DefaultCode
+                        ))
+                        .ToList()
+                ))
+                .AsSplitQuery();
+
+        private static string[] GetSeniorityFallbackOrder(string? level) =>
+            level switch
+            {
+                SeniorityLevels.Senior =>
+                [
+                    SeniorityLevels.Senior,
+                    SeniorityLevels.MidLevel,
+                    SeniorityLevels.Junior,
+                ],
+                SeniorityLevels.MidLevel =>
+                [
+                    SeniorityLevels.MidLevel,
+                    SeniorityLevels.Junior,
+                    SeniorityLevels.Senior,
+                ],
+                SeniorityLevels.Junior =>
+                [
+                    SeniorityLevels.Junior,
+                    SeniorityLevels.MidLevel,
+                    SeniorityLevels.Senior,
+                ],
+                _ => [SeniorityLevels.MidLevel, SeniorityLevels.Junior, SeniorityLevels.Senior],
+            };
+    }
+
+    public sealed class Endpoint : IEndpoint
+    {
+        public void Map(IEndpointRouteBuilder app)
+        {
+            app.MapPost(
+                    "/interview-sessions",
+                    async (
+                        [FromForm] IFormFile cvFile,
+                        [FromForm] string? jobDescription,
+                        IMediator mediator,
+                        ClaimsPrincipal user
+                    ) =>
+                    {
+                        var userId = user.GetUserId();
+                        if (string.IsNullOrEmpty(userId))
+                            return Results.Unauthorized();
+
+                        var request = new Request(cvFile, jobDescription) { UserId = userId };
+                        var response = await mediator.Send(request);
+                        return response.ToHttpResult();
+                    }
+                )
+                .WithTags("Interviews")
+                .RequireAuthorization()
+                .DisableAntiforgery();
         }
     }
 }

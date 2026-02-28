@@ -1,3 +1,3 @@
 ﻿namespace MockMate.Api.Clients.AiService.Dtos;
 
-public record CandidateProfileRequest(Stream Resume, string? JobDescription);
+public record CandidateProfileRequest(Stream CV, string? JobDescription);
