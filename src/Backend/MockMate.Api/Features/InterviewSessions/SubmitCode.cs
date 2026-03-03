@@ -23,6 +23,7 @@ public sealed class SubmitCode
         bool IsFinalSubmit
     ) : IRequest<Result<Response>>
     {
+        [JsonIgnore]
         public string UserId { get; set; } = string.Empty;
     }
 
