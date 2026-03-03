@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json.Serialization;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -131,7 +132,13 @@ public sealed class SubmitCode
             {
                 if (request.IsFinalSubmit)
                 {
-                    UpdateAnswer(answer, request, status: "Compilation Error", score: 0, isCorrect: false);
+                    UpdateAnswer(
+                        answer,
+                        request,
+                        status: "Compilation Error",
+                        score: 0,
+                        isCorrect: false
+                    );
                     await context.SaveChangesAsync(cancellationToken);
                 }
 
