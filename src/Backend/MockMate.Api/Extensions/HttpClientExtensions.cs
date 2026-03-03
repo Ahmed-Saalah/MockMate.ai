@@ -1,5 +1,7 @@
-﻿using MockMate.Api.Clients.AiService;
+using MockMate.Api.Clients.AiService;
 using MockMate.Api.Clients.AiService.Interfaces;
+using MockMate.Api.Clients.Judge0;
+using MockMate.Api.Clients.Judge0.Interfaces;
 
 namespace MockMate.Api.Extensions;
 
@@ -24,6 +26,44 @@ public static class HttpClientExtensions
 
             client.BaseAddress = new Uri(url);
             client.Timeout = TimeSpan.FromMinutes(1);
+        });
+
+        services.AddHttpClient<IJudge0Service, Judge0Service>(client =>
+        {
+            var url = configuration["Judge0:BaseUrl"];
+
+            if (string.IsNullOrEmpty(url))
+            {
+                throw new ArgumentNullException(
+                    nameof(url),
+                    "Judge0:BaseUrl is missing in appsettings.json"
+                );
+            }
+
+            // Ensure the base URL ends with a slash so relative paths resolve correctly.
+            client.BaseAddress = new Uri(url.TrimEnd('/') + '/');
+            client.Timeout = TimeSpan.FromMinutes(2);
+
+            // Optional RapidAPI headers — only applied when using the hosted Judge0 CE instance.
+            // Both values must be present together; a partial configuration is a startup error.
+            var apiKey = configuration["Judge0:ApiKey"];
+            var apiHost = configuration["Judge0:ApiHost"];
+
+            var hasKey = !string.IsNullOrEmpty(apiKey);
+            var hasHost = !string.IsNullOrEmpty(apiHost);
+
+            if (hasKey && hasHost)
+            {
+                client.DefaultRequestHeaders.Add("X-RapidAPI-Key", apiKey);
+                client.DefaultRequestHeaders.Add("X-RapidAPI-Host", apiHost);
+            }
+            else if (hasKey != hasHost)
+            {
+                throw new InvalidOperationException(
+                    "Judge0 RapidAPI configuration is incomplete. "
+                        + "Both 'Judge0:ApiKey' and 'Judge0:ApiHost' must be set together, or both must be left empty for a self-hosted instance."
+                );
+            }
         });
 
         return services;

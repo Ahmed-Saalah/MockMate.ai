@@ -1,4 +1,4 @@
-﻿namespace MockMate.Api.Entities;
+namespace MockMate.Api.Entities;
 
 public class SessionAnswer
 {
@@ -10,5 +10,8 @@ public class SessionAnswer
     public int? SelectedOptionId { get; set; }
     public McqOption? SelectedOption { get; set; }
     public string? SubmittedCode { get; set; }
+    public int? LanguageId { get; set; }
+    public decimal Score { get; set; } = 0;
+    public string? Status { get; set; }
     public bool IsCorrect { get; set; }
 }
