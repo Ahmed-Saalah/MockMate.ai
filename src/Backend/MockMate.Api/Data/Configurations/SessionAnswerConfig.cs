@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using MockMate.Api.Entities;
 
@@ -22,5 +22,10 @@ public class SessionAnswerConfig : IEntityTypeConfiguration<SessionAnswer>
             .WithMany()
             .HasForeignKey(a => a.SelectedOptionId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Score stores a percentage (0.00–100.00).
+        builder.Property(a => a.Score).HasPrecision(5, 2);
+
+        builder.Property(a => a.Status).HasMaxLength(50);
     }
 }
