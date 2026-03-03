@@ -113,7 +113,7 @@ public sealed class SubmitCode
             // 4. Merge user code with the driver code stored in the database.
             var mergedCode = string.IsNullOrWhiteSpace(template.DriverCode)
                 ? request.SourceCode
-                : $"{request.SourceCode}\n{template.DriverCode}";
+                : template.DriverCode.Replace("{{USER_CODE}}", request.SourceCode);
 
             // 5. Execute all test cases via Judge0 batch submission.
             var results = await judge0Service.ExecuteAsync(
