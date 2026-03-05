@@ -14,7 +14,7 @@ using MockMate.Api.Services.CodeExecutionService;
 
 namespace MockMate.Api.Features.InterviewSessions;
 
-public sealed class SubmitCode
+public sealed class RunCode
 {
     public sealed record Request(int QuestionId, int LanguageId, string SourceCode)
         : IRequest<Result<Response>>
@@ -27,9 +27,7 @@ public sealed class SubmitCode
     }
 
     public sealed record Response(
-        int SessionAnswerId,
         string Status,
-        decimal Score,
         int PassedTestCases,
         int TotalTestCases,
         List<TestCaseDetail> TestCaseResults
@@ -83,14 +81,14 @@ public sealed class SubmitCode
             if (session.UserId != request.UserId)
                 return new ForbiddenError("You do not have access to this interview session.");
 
-            var answer = session.Answers.FirstOrDefault(a => a.QuestionId == request.QuestionId);
-            if (answer is null)
+            var answerExists = session.Answers.Any(a => a.QuestionId == request.QuestionId);
+            if (!answerExists)
                 return new NotFoundError(
                     "The specified question is not part of this interview session."
                 );
 
             var question = await context
-                .Questions.Include(q => q.TestCases.OrderBy(tc => tc.Id))
+                .Questions.Include(q => q.TestCases.Where(tc => !tc.IsHidden).OrderBy(tc => tc.Id))
                 .Include(q => q.Templates)
                 .FirstOrDefaultAsync(q => q.Id == request.QuestionId, cancellationToken);
 
@@ -107,7 +105,7 @@ public sealed class SubmitCode
 
             var testCases = question.TestCases.ToList();
             if (testCases.Count == 0)
-                return new BadRequestError("This question has no test cases configured.");
+                return new BadRequestError("This question has no visible test cases configured.");
 
             CodeExecutionResult executionResult;
             try
@@ -125,50 +123,27 @@ public sealed class SubmitCode
                 return new ServiceUnavailableError();
             }
 
-            string overallStatus;
-            decimal score;
-
-            if (executionResult.HasCompilationError)
-            {
-                overallStatus = ExecutionStatus.CompilationError;
-                score = 0m;
-            }
-            else
-            {
-                bool allPassed = executionResult.PassedCount == executionResult.TotalCount;
-                overallStatus = allPassed ? ExecutionStatus.Passed : ExecutionStatus.Failed;
-                score =
-                    executionResult.TotalCount > 0
-                        ? Math.Round(
-                            (decimal)executionResult.PassedCount / executionResult.TotalCount * 100,
-                            2
-                        )
-                        : 0m;
-            }
-
-            answer.SubmittedCode = request.SourceCode;
-            answer.LanguageId = request.LanguageId;
-            answer.Score = score;
-            answer.Status = overallStatus;
-            answer.IsCorrect = overallStatus == ExecutionStatus.Passed;
-
-            await context.SaveChangesAsync(cancellationToken);
+            string overallStatus = executionResult.HasCompilationError
+                ? ExecutionStatus.CompilationError
+                : (
+                    executionResult.PassedCount == executionResult.TotalCount
+                        ? ExecutionStatus.Passed
+                        : ExecutionStatus.Failed
+                );
 
             var testCaseDetails = executionResult
                 .Details.Select(d => new TestCaseDetail(
                     d.TestCaseId,
-                    d.IsHidden ? ExecutionStatus.HiddenTestCase : d.Input,
-                    d.IsHidden ? ExecutionStatus.Hidden : d.ExpectedOutput,
-                    d.IsHidden ? null : d.ActualOutput,
-                    d.IsHidden ? null : d.CompileOutput,
+                    d.Input,
+                    d.ExpectedOutput,
+                    d.ActualOutput,
+                    d.CompileOutput,
                     d.Status
                 ))
                 .ToList();
 
             return new Response(
-                answer.Id,
                 overallStatus,
-                score,
                 executionResult.PassedCount,
                 executionResult.TotalCount,
                 testCaseDetails
@@ -181,7 +156,7 @@ public sealed class SubmitCode
         public void Map(IEndpointRouteBuilder app)
         {
             app.MapPost(
-                    "/interview-sessions/{id:int}/submit-code",
+                    "/interview-sessions/{id:int}/run-code",
                     async (int id, Request body, IMediator mediator, ClaimsPrincipal user) =>
                     {
                         var userId = user.GetUserId();
