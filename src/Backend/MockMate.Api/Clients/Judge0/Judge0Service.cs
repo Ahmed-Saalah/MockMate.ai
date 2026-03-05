@@ -43,6 +43,13 @@ public sealed class Judge0Service(HttpClient httpClient) : IJudge0Service
             cancellationToken
         );
 
+        if (postResponse.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+        {
+            throw new Exception(
+                "Code execution engine is currently at capacity. Please try again later."
+            );
+        }
+
         postResponse.EnsureSuccessStatusCode();
 
         var tokens =

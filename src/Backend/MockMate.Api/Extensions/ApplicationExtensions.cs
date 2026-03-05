@@ -1,6 +1,7 @@
-﻿using FluentValidation;
+using FluentValidation;
 using MockMate.Api.Common.Behaviors;
 using MockMate.Api.Configuration;
+using MockMate.Api.Services.CodeExecutionService;
 using MockMate.Api.Services.StorageService;
 
 namespace MockMate.Api.Extensions;
@@ -23,6 +24,7 @@ public static class ApplicationExtensions
             configuration.GetSection(CloudinaryOptions.SectionName)
         );
         services.AddScoped<IImageStorageService, CloudinaryStorageService>();
+        services.AddScoped<ICodeExecutionService, CodeExecutionService>();
         services.AddHttpContextAccessor();
         return services;
     }
