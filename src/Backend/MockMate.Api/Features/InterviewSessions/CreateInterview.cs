@@ -119,9 +119,11 @@ public sealed class CreateInterview
             foreach (var level in seniorityFallbackOrder)
             {
                 if (mcqQuestions.Count >= totalMcqNeeded)
+                {
                     break;
-                int neededCount = totalMcqNeeded - mcqQuestions.Count;
+                }
 
+                int neededCount = totalMcqNeeded - mcqQuestions.Count;
                 var fetched = await GetMcqProjection(
                         mcqBaseQuery.Where(q => q.SeniorityLevel == level)
                     )
@@ -138,8 +140,8 @@ public sealed class CreateInterview
                 {
                     break;
                 }
-                int neededCount = totalCodingNeeded - codingQuestions.Count;
 
+                int neededCount = totalCodingNeeded - codingQuestions.Count;
                 var fetched = await GetCodingProjection(
                         codingBaseQuery.Where(q => q.SeniorityLevel == level)
                     )
@@ -152,6 +154,8 @@ public sealed class CreateInterview
             var session = new InterviewSession
             {
                 UserId = request.UserId,
+                TrackName = detectedTrack,
+                SeniorityLevel = detectedLevel,
                 StartDate = DateTime.UtcNow,
                 Answers = mcqQuestions
                     .Select(q => new SessionAnswer { QuestionId = q.QuestionId })

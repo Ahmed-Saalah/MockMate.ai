@@ -15,6 +15,8 @@ public sealed class GetUserInterviews
 {
     public sealed record SessionDto(
         int InterviewSessionId,
+        string TrackName,
+        string SeniorityLevel,
         decimal Score,
         DateTime StartDate,
         DateTime? EndDate,
@@ -49,7 +51,15 @@ public sealed class GetUserInterviews
                 .InterviewSessions.AsNoTracking()
                 .Where(s => s.UserId == request.UserId)
                 .OrderByDescending(s => s.StartDate)
-                .Select(s => new SessionDto(s.Id, s.Score, s.StartDate, s.EndDate, s.Feedback));
+                .Select(s => new SessionDto(
+                    s.Id,
+                    s.TrackName,
+                    s.SeniorityLevel,
+                    s.Score,
+                    s.StartDate,
+                    s.EndDate,
+                    s.Feedback
+                ));
 
             var totalCount = await query.CountAsync(cancellationToken);
 

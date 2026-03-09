@@ -12,6 +12,10 @@ public class InterviewSessionConfig : IEntityTypeConfiguration<InterviewSession>
 
         builder.Property(s => s.Score).HasPrecision(5, 2);
 
+        builder.Property(s => s.TrackName).HasMaxLength(50).IsRequired();
+
+        builder.Property(s => s.SeniorityLevel).HasMaxLength(50).IsRequired();
+
         builder.HasIndex(s => s.UserId);
 
         builder
