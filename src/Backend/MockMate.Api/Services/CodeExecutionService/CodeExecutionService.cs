@@ -49,7 +49,9 @@ public sealed class CodeExecutionService(IJudge0Service judge0Service) : ICodeEx
 
             string status = raw.Status?.Id switch
             {
-                Judge0Accepted => isCorrect ? ExecutionStatus.Accepted : ExecutionStatus.WrongAnswer,
+                Judge0Accepted => isCorrect
+                    ? ExecutionStatus.Accepted
+                    : ExecutionStatus.WrongAnswer,
                 Judge0CompilationError => ExecutionStatus.CompilationError,
                 _ => raw.Status?.Description ?? ExecutionStatus.WrongAnswer,
             };

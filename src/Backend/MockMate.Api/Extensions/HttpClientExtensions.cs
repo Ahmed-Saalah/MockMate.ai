@@ -40,18 +40,12 @@ public static class HttpClientExtensions
                 );
             }
 
-            // Ensure the base URL ends with a slash so relative paths resolve correctly.
             client.BaseAddress = new Uri(url.TrimEnd('/') + '/');
             client.Timeout = TimeSpan.FromMinutes(2);
-
-            // Optional RapidAPI headers — only applied when using the hosted Judge0 CE instance.
-            // Both values must be present together; a partial configuration is a startup error.
             var apiKey = configuration["Judge0:ApiKey"];
             var apiHost = configuration["Judge0:ApiHost"];
-
             var hasKey = !string.IsNullOrEmpty(apiKey);
             var hasHost = !string.IsNullOrEmpty(apiHost);
-
             if (hasKey && hasHost)
             {
                 client.DefaultRequestHeaders.Add("X-RapidAPI-Key", apiKey);
