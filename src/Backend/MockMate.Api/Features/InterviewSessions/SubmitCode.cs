@@ -78,16 +78,22 @@ public sealed class SubmitCode
                 .FirstOrDefaultAsync(s => s.Id == request.InterviewSessionId, cancellationToken);
 
             if (session is null)
+            {
                 return new NotFoundError("Interview session not found.");
+            }
 
             if (session.UserId != request.UserId)
+            {
                 return new ForbiddenError("You do not have access to this interview session.");
+            }
 
             var answer = session.Answers.FirstOrDefault(a => a.QuestionId == request.QuestionId);
             if (answer is null)
+            {
                 return new NotFoundError(
                     "The specified question is not part of this interview session."
                 );
+            }
 
             var question = await context
                 .Questions.Include(q => q.TestCases.OrderBy(tc => tc.Id))
@@ -95,19 +101,25 @@ public sealed class SubmitCode
                 .FirstOrDefaultAsync(q => q.Id == request.QuestionId, cancellationToken);
 
             if (question is null)
+            {
                 return new NotFoundError("Question not found.");
+            }
 
             var template = question.Templates.FirstOrDefault(t =>
                 t.LanguageId == request.LanguageId
             );
             if (template is null)
+            {
                 return new NotFoundError(
                     $"No code template exists for language ID {request.LanguageId} on this question."
                 );
+            }
 
             var testCases = question.TestCases.ToList();
             if (testCases.Count == 0)
+            {
                 return new BadRequestError("This question has no test cases configured.");
+            }
 
             CodeExecutionResult executionResult;
             try

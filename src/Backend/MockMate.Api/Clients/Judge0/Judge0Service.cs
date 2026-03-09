@@ -76,7 +76,6 @@ public sealed class Judge0Service(HttpClient httpClient) : IJudge0Service
 
         while (true)
         {
-            // Respect Judge0's fair-use guidance: wait before the first poll as well.
             await Task.Delay(1_500, cancellationToken);
 
             var batch = await httpClient.GetFromJsonAsync<Judge0BatchResultResponse>(

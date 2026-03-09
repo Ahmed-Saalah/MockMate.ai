@@ -24,7 +24,7 @@ public sealed class CreateInterview
         : IRequest<Result<Response>>
     {
         [JsonIgnore]
-        public string UserId { get; set; } = string.Empty;
+        public int UserId { get; set; }
     }
 
     public sealed record Response(
@@ -151,7 +151,7 @@ public sealed class CreateInterview
 
             var session = new InterviewSession
             {
-                UserId = int.Parse(request.UserId),
+                UserId = request.UserId,
                 StartDate = DateTime.UtcNow,
                 Answers = mcqQuestions
                     .Select(q => new SessionAnswer { QuestionId = q.QuestionId })
@@ -242,7 +242,10 @@ public sealed class CreateInterview
                         if (string.IsNullOrEmpty(userId))
                             return Results.Unauthorized();
 
-                        var request = new Request(cvFile, jobDescription) { UserId = userId };
+                        var request = new Request(cvFile, jobDescription)
+                        {
+                            UserId = int.Parse(userId),
+                        };
                         var response = await mediator.Send(request);
                         return response.ToHttpResult();
                     }

@@ -2,7 +2,6 @@
 
 public interface IImageStorageService
 {
-    // Takes a file, returns the public URL
     Task<string> UploadImageAsync(
         IFormFile file,
         string folderName = "mockmate/avatars",

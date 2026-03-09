@@ -1,15 +1,15 @@
 ﻿using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using MockMate.Api.Common.Results;
-using MockMate.Api.Common.Errors;
-using MockMate.Api.Data;
 using MockMate.Api.Common.Endpoints;
+using MockMate.Api.Common.Errors;
 using MockMate.Api.Common.Http;
+using MockMate.Api.Common.Results;
+using MockMate.Api.Data;
 
 namespace MockMate.Api.Features.InterviewSessions;
 
-public sealed class GetInterviewSessionById
+public sealed class GetInterview
 {
     public sealed record Response(
         int InterviewSessionId,
@@ -21,36 +21,30 @@ public sealed class GetInterviewSessionById
         string? Feedback
     );
 
-    public sealed record Request(int Id)
-        : IRequest<Result<Response>>;
+    public sealed record Request(int Id) : IRequest<Result<Response>>;
 
     public sealed class Validator : AbstractValidator<Request>
     {
         public Validator()
         {
-            RuleFor(x => x.Id)
-                .GreaterThan(0);
+            RuleFor(x => x.Id).GreaterThan(0);
         }
     }
 
-    public sealed class Handler(AppDbContext context, IValidator<Request> validator)
-        : IRequestHandler<Request, Result<Response>>
+    public sealed class Handler(AppDbContext context) : IRequestHandler<Request, Result<Response>>
     {
         public async Task<Result<Response>> Handle(
             Request request,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
-            var validationResult = await validator.ValidateAsync(request, cancellationToken);
-            if (!validationResult.IsValid)
-                return new ValidationError(validationResult.Errors);
-
-            var session = await context.InterviewSessions
-                .AsNoTracking()
+            var session = await context
+                .InterviewSessions.AsNoTracking()
                 .Where(s => s.Id == request.Id)
                 .Select(s => new Response(
                     s.Id,
                     s.UserId,
-                    s.User.UserName ?? string.Empty,
+                    s.User.UserName,
                     s.Score,
                     s.StartDate,
                     s.EndDate,
@@ -75,7 +69,8 @@ public sealed class GetInterviewSessionById
                     {
                         var response = await mediator.Send(new Request(id));
                         return response.ToHttpResult();
-                    })
+                    }
+                )
                 .WithTags("Interviews")
                 .RequireAuthorization();
         }
