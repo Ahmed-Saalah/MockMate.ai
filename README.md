@@ -67,23 +67,11 @@ The core business logic service, responsible for:
 - **User authentication and identity management** via ASP.NET Core Identity and JWT Bearer tokens
 - **Interview session lifecycle** — creation, question serving, answer recording, timer tracking, and auto-scoring
 - **Code execution routing** — forwarding candidate code submissions to the **Judge0** API and evaluating results against test cases
-- **Data persistence** — all entities (users, sessions, questions, skills, tracks) are stored in **SQL Server** via **Entity Framework Core** with code-first migrations applied automatically on startup
+- **Data persistence** — all entities (users, sessions, questions, skills, tracks) are stored in **SQL Server** via **Entity Framework Core** with code-first migrations
 - **AI Service integration** — calling the Python service with an uploaded CV to receive structured skill data before assembling a session
-- **OpenAPI documentation** — a fully interactive Swagger UI exposed at `/swagger`
 
 The backend is organized using **vertical slice architecture**, with one MediatR handler per feature endpoint, and **FluentValidation** for all incoming request validation.
 
-**Feature Domains:**
-
-| Domain | Capabilities |
-|---|---|
-| Auth | Register, Login, Logout, Refresh Token |
-| Interview Sessions | Create Session, Get Session, Get All Sessions, Get User History |
-| Questions | CRUD for MCQ and Coding questions |
-| Skills | CRUD for skills catalog |
-| Tracks | CRUD for career tracks |
-| Users | Get profile, Update profile |
-| Code Runner | Run code (live), Submit code (evaluated) |
 
 ### AI Service — Python / FastAPI
 
@@ -146,8 +134,6 @@ The platform is fully operational using a **curated question bank** approach:
 1. The AI Service parses the uploaded CV and/or job description and returns `track_name`, `seniority level`, and `technical_skills`.
 2. The Backend queries SQL Server to select relevant MCQ and coding questions matching the extracted track, seniority, and skills.
 3. The interview session is assembled, timed, served to the candidate, executed via Judge0, auto-graded, and persisted.
-
-> **Why this approach?** A pre-vetted question bank guarantees consistency, accuracy, and quality control during the initial rollout — eliminating the risk of hallucinated or malformed questions from an LLM during early-stage development.
 
 ### Phase 2 — AI-Generated Assessment *(Planned)*
 
@@ -222,22 +208,12 @@ Open `appsettings.json` or create a local override file `appsettings.Development
 }
 ```
 
-> **Database migrations** are applied **automatically** when the application starts. You do not need to run `dotnet ef database update` manually.
-
 **Restore packages and run:**
 
 ```bash
 dotnet restore
 dotnet run
 ```
-
-The API will be available at:
-
-| Protocol | URL |
-|---|---|
-| HTTP | `http://localhost:5143` |
-| HTTPS | `https://localhost:7000` |
-| Swagger UI | `https://localhost:7000/swagger` |
 
 ---
 
@@ -267,29 +243,11 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-**Configure environment variables:**
-
-Create a `.env` file inside `src/AI/`:
-
-```env
-GEMINI_API_KEY=your_google_gemini_api_key_here
-```
-
-> A free Gemini API key can be obtained from [Google AI Studio](https://aistudio.google.com/app/apikey).
-
 **Start the development server:**
 
 ```bash
 uvicorn api:app --reload --host 0.0.0.0 --port 8000
 ```
-
-The AI service will be available at:
-
-| URL | Description |
-|---|---|
-| `http://localhost:8000` | Base URL |
-| `http://localhost:8000/docs` | Interactive Swagger docs |
-| `POST http://localhost:8000/analyze` | CV analysis endpoint |
 
 ---
 
@@ -308,20 +266,10 @@ curl http://localhost:5143/health
 
 ---
 
-## Team
-
-| Name | Role | GitHub |
-|---|---|---|
-| Ahmed Salah | Full-Stack | [@Ahmed-Saalah](https://github.com/Ahmed-Saalah) |
-| Ahmed Khaled | Full-Stack | [@Ahmedkhaled-30](https://github.com/Ahmedkhaled-30) |
-| Ahmed Hafez| Full-Stack | [@Ahmed-Hafez](https://github.com/Ahmed-Hafez-1) |
-| Rahma Ezzat | AI / ML Engineer | [@rahmaezzeldin](https://github.com/rahmaezzeldin) |
-
----
-
 <div align="center">
 
 *Built with passion as a graduation project.*
 
 </div>
+
 
