@@ -485,3 +485,9 @@ $RECYCLE.BIN/
 *.swp
 
 .env
+# Python Virtual Environments 
+.venv/
+
+# Python Cache
+__pycache__/
+*.pyc
