@@ -1,8 +1,7 @@
 import json
 import logging
 import re
-# from google import genai
-import google.generativeai as genai
+from google import genai
 from core.config import Config
 
 client = genai.Client(api_key=Config.GEMINI_API_KEY)
