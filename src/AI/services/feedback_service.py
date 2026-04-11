@@ -1,5 +1,5 @@
-from feedback_prompt import build_feedback_prompt
-from llm_utils import analyze_content
+from prompts.feedback import build_feedback_prompt
+from utils.llm import analyze_content
 
 
 def generate_feedback(interview_data: dict) -> dict:

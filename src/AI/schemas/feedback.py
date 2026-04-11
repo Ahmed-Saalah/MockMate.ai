@@ -1,6 +1,4 @@
 def validate_feedback_structure(data: dict):
-   
-    
     required_keys = [
         "overallSummary",
         "strengths",

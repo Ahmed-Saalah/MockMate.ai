@@ -1,6 +1,15 @@
+from pydantic import BaseModel
+from typing import List
+
+class ResumeAnalysis(BaseModel):
+    track_name: str
+    level: str
+    technical_skills: List[str]
+
+
 VALID_LEVELS = ["Junior", "Mid-level", "Senior"]
 
-def validate_output(data: dict) -> dict:
+def validate_cv_output(data: dict) -> dict:
     if not isinstance(data, dict):
         raise ValueError("Output is not a dictionary")
 

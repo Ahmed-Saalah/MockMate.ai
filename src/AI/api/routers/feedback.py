@@ -1,11 +1,10 @@
-from fastapi import FastAPI, HTTPException
-from feedback_service import generate_feedback
-from feedback_validator import validate_feedback_structure
+from fastapi import APIRouter, HTTPException
+from services.feedback_service import generate_feedback
+from schemas.feedback import validate_feedback_structure
 
-app = FastAPI()
+router = APIRouter()
 
-
-@app.post("/generate-feedback")
+@router.post("/generate-feedback")
 def feedback_endpoint(interview_data: dict):
     try:
         feedback = generate_feedback(interview_data)
