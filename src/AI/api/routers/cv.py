@@ -1,16 +1,15 @@
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 import tempfile
 import os
 import logging
 
-from pdf_utils import extract_text_from_pdf
-from main import run_resume_analysis
+from utils.pdf import extract_text_from_pdf
+from services.cv_service import run_resume_analysis
 
-app = FastAPI(title="CV AI Analyzer Service")
+router = APIRouter()
 
-
-@app.post("/analyze")
-async def analyze_resume(
+@router.post("/analyze")
+async def analyze_resume_endpoint(
     cv_file: UploadFile = File(...),
     job_description: str = Form(None)
 ):
@@ -23,9 +22,7 @@ async def analyze_resume(
             tmp.write(content)
             temp_path = tmp.name
 
-
         cv_text = extract_text_from_pdf(temp_path)
-
 
         os.remove(temp_path)
 
