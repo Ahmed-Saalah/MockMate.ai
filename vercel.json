@@ -1,10 +1,11 @@
 {
+  "version": 2,
   "rewrites": [
     { "source": "/(.*)", "destination": "/src/AI/main.py" }
   ],
   "functions": {
     "src/AI/main.py": {
-      "runtime": "vercel-python@1.0.0",
+      "runtime": "@vercel/python",
       "memory": 1024,
       "maxDuration": 300
     }
