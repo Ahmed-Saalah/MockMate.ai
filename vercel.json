@@ -1,24 +1,15 @@
 {
   "version": 2,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/src/AI/main.py"
+    }
+  ],
   "functions": {
     "src/AI/main.py": {
-      "runtime": "python@3.12",
       "memory": 1024,
       "maxDuration": 60
     }
-  },
-  "rewrites": [
-    {
-      "source": "/api/ai/(.*)",
-      "destination": "/src/AI/main.py"
-    },
-    {
-      "source": "/docs",
-      "destination": "/src/AI/main.py"
-    },
-    {
-      "source": "/openapi.json",
-      "destination": "/src/AI/main.py"
-    }
-  ]
+  }
 }
