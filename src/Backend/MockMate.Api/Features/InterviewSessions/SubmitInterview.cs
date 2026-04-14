@@ -161,7 +161,7 @@ public sealed class SubmitInterview
                         return result.ToHttpResult();
                     }
                 )
-                //.RequireAuthorization()
+                .RequireAuthorization()
                 .WithTags("Interviews");
         }
     }
