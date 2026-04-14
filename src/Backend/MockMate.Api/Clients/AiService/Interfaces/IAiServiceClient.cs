@@ -8,4 +8,9 @@ public interface IAiServiceClient
         CandidateProfileRequest request,
         CancellationToken cancellationToken = default
     );
+
+    Task<FeedbackResponse?> GetInterviewFeedbackAsync(
+        FeedbackRequest request,
+        CancellationToken cancellationToken = default
+    );
 }
