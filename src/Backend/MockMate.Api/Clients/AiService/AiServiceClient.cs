@@ -48,4 +48,41 @@ public class AiServiceClient(HttpClient httpClient, ILogger<AiServiceClient> log
             throw;
         }
     }
+
+    public async Task<FeedbackResponse?> GetInterviewFeedbackAsync(
+        FeedbackRequest request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            var response = await httpClient.PostAsJsonAsync(
+                "/generate-feedback",
+                request,
+                cancellationToken
+            );
+
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadFromJsonAsync<FeedbackResponse>(
+                cancellationToken: cancellationToken
+            );
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogError(
+                ex,
+                "HTTP error occurred while calling the AI Service for interview feedback."
+            );
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "An unexpected error occurred while communicating with the AI Service for interview feedback."
+            );
+            throw;
+        }
+    }
 }
