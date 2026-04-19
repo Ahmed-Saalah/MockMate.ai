@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, HTTPException
 from services.feedback_service import generate_feedback
 from schemas.feedback import validate_feedback_structure
@@ -12,8 +13,7 @@ def feedback_endpoint(interview_data: dict):
         validate_feedback_structure(feedback)
 
         return {
-            "status": "success",
-            "data": feedback
+            "feedback": json.dumps(feedback)
         }
 
     except ValueError as ve:
