@@ -4,7 +4,7 @@ from fastapi.responses import RedirectResponse
 
 from api.routers import cv, feedback
 from api.routers.questions_full import router as questions_full_router
-from api.routers.questions import router as questions_only_router
+#from api.routers.questions import router as questions_only_router
 
 # Configure root logger
 logging.basicConfig(level=logging.INFO)
