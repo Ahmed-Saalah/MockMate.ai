@@ -11,10 +11,10 @@ router = APIRouter()
 @router.post("/analyze")
 async def analyze_resume_endpoint(
     cv_file: UploadFile = File(...),
-    job_description: str = Form(None)
+    job_description: str = Form(..., description="Full job description text (required)")
 ):
     try:
-        logging.info("Receiving CV file...")
+        logging.info("Receiving CV file and job description...")
 
         # Save temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
@@ -23,13 +23,12 @@ async def analyze_resume_endpoint(
             temp_path = tmp.name
 
         cv_text = extract_text_from_pdf(temp_path)
-
         os.remove(temp_path)
 
         if not cv_text.strip():
-            raise HTTPException(status_code=400, detail="Empty CV text.")
+            logging.warning("CV text is empty, but job_description is provided → continuing with JD only")
 
-        # Run analysis
+        # Run analysis (job_description is now required)
         result = run_resume_analysis(cv_text, job_description)
 
         return {
