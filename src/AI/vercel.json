@@ -11,13 +11,5 @@
       "source": "/(.*)",
       "destination": "main.py"
     }
-  ],
-  "functions": {
-    "api/**/*.py": {
-      "maxDuration": 60
-    },
-    "main.py": {
-      "maxDuration": 60
-    }
-  }
+  ]
 }
