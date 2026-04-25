@@ -1,13 +1,16 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
-import tempfile
-import os
+import asyncio
 import logging
+import os
+import tempfile
 
-from utils.pdf import extract_text_from_pdf
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+
 from services.cv_service import run_resume_analysis
-from services.questions_service import generate_interview_questions
+from services.questions_service import generate_interview_questions_parallel
+from utils.pdf import extract_text_from_pdf
 
 router = APIRouter(prefix="/interview", tags=["Full Interview"])
+
 
 @router.post("/full", summary="Generate Full Interview (CV + JD)")
 async def generate_full_interview(
@@ -17,6 +20,7 @@ async def generate_full_interview(
     try:
         logging.info("📥 Starting Full Interview Generation...")
 
+        # ── 1. Save & extract PDF (fast, no LLM) ──────────────────────────
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             content = await cv_file.read()
             tmp.write(content)
@@ -26,14 +30,24 @@ async def generate_full_interview(
         os.remove(temp_path)
 
         if not cv_text.strip():
-            raise HTTPException(status_code=400, detail="Empty or unreadable CV")
+            logging.warning("⚠️ CV is empty — will rely on JD only for analysis")
+            cv_text = ""
 
-        cv_analysis = run_resume_analysis(cv_text, job_description)
+        # ── 2. CV analysis (fast LLM call — thinking disabled) ─────────────
+        cv_analysis = await asyncio.get_event_loop().run_in_executor(
+            None, run_resume_analysis, cv_text, job_description
+        )
 
-        questions = generate_interview_questions(cv_analysis=cv_analysis, job_description=job_description)
+        # ── 3. MCQ + Coding in parallel (the heavy part) ───────────────────
+        questions = await generate_interview_questions_parallel(
+            cv_analysis=cv_analysis,
+            job_description=job_description,
+        )
 
         return questions
 
+    except HTTPException:
+        raise
     except Exception as e:
         logging.error(f"❌ Full interview error: {e}")
         raise HTTPException(status_code=500, detail=str(e))

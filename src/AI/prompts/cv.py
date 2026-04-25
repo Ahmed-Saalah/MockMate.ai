@@ -4,69 +4,62 @@ def build_prompt(cv_text: str, job_description: str) -> str:
         "Frontend Development",
         "Full-Stack Development",
         "Mobile Development",
-        "AI & Machine Learning Engineering"
+        "AI & Machine Learning Engineering",
+        "General Software Engineer",
     ]
-    
-    allowed_tracks_str = ", ".join(f'"{track}"' for track in allowed_tracks)
+    allowed_tracks_str = ", ".join(f'"{t}"' for t in allowed_tracks)
 
-    return f"""You are a senior technical recruiter and expert AI resume analyst with 10+ years of experience in tech hiring.
+    cv_empty = not cv_text or not cv_text.strip()
+    jd_empty = not job_description or not job_description.strip() or job_description.strip().lower() in ("no", "none", "-", "n/a")
 
-Your task is to deeply analyze the provided CV/resume text **AND** the target job description, and return **structured technical evaluation** in **valid JSON only**.
+    if cv_empty and not jd_empty:
+        scenario = "SCENARIO 2: CV is empty, JD is provided.\n- Determine track, level, and skills ENTIRELY from the JD.\n- Ignore CV completely."
+    elif not cv_empty and not jd_empty:
+        scenario = "SCENARIO 3: CV has skills, JD is provided.\n- Determine track and level from the JD (JD takes priority).\n- Skills = CV skills that are relevant to the JD role + any important skills from the JD not already in CV.\n- DISCARD CV skills unrelated to the JD role."
+    elif not cv_empty and jd_empty:
+        scenario = "SCENARIO 1: CV has skills, JD is missing or unclear.\n- Determine track, level, and skills ENTIRELY from the CV."
+    else:
+        scenario = "SCENARIO 4: CV is empty and JD is missing or unclear.\n- Set track_name to 'General Software Engineer'.\n- Set level to 'Junior'.\n- Set technical_skills to core software engineering skills: Python, Git, SQL, REST APIs, Docker, Data Structures, Algorithms, Linux."
 
-STRICT RULES – MUST FOLLOW EXACTLY:
-- Return **ONLY** valid JSON. No explanations, no markdown, no comments, no extra text whatsoever.
-- The JSON must be parsable with json.loads() without errors.
-- Do NOT invent experience, education, or personal info not clearly present in the CV.
-- For technical skills: you MAY add industry-standard skills required by the job_description (even if not explicitly in CV), especially if CV is empty/sparse.
+    return f"""You are a senior technical recruiter and expert AI resume analyst.
 
-Output format (exactly this structure):
+Analyze the inputs and return ONLY valid JSON — no markdown, no explanation.
+
+OUTPUT FORMAT:
 {{
-  "track_name": "EXACT STRING MATCH REQUIRED. Must be strictly one of: [{allowed_tracks_str}]",
+  "track_name": "Exactly one of: [{allowed_tracks_str}]",
   "level": "Junior | Mid-level | Senior",
-    "technical_skills": ["Skill1", "Skill2", "Skill3", ...]  
-  // Maximum 12 skills. Only concrete libraries, frameworks, tools, and platforms suitable for deep technical interview questions.
+  "technical_skills": ["Skill1", "Skill2", ...]
 }}
 
-Track classification rules (CRITICAL):
-- Choose the single best-fitting track **primarily from the job_description**. Analyze the job responsibilities and requirements to decide the track.
-- Use the CV only to confirm/support if possible.
-- **DO NOT use synonyms or abbreviations.** Exact match only.
-- Backend-focused (.NET, Java, Node.js, Go...) → "Backend Development"
-- React/Angular/Vue → "Frontend Development"
-- Flutter/iOS/Android → "Mobile Development"
+ACTIVE SCENARIO:
+{scenario}
 
-Level classification rules (use strictly):
-- "Junior": Student, fresh graduate, internships only, <1 year real-world experience
-- "Mid-level": 1–3 years professional experience, multiple real projects
-- "Senior": 4+ years professional experience, senior/lead roles, complex systems
+TRACK MAPPING (use when determining track):
+- .NET / Java / Node.js / Go / Python backend → "Backend Development"
+- React / Angular / Vue / JavaScript / CSS / HTML / Frontend Developer → "Frontend Development"
+- Both frontend + backend → "Full-Stack Development"
+- Flutter / iOS / Android / React Native → "Mobile Development"
+- ML / AI / Data Science / LLMs / Computer Vision / NLP / Data Scientist → "AI & Machine Learning Engineering"
+- Cannot be determined → "General Software Engineer"
+- Must be character-for-character exact match.
 
-Technical skills rules (UPDATED - VERY IMPORTANT):
-- Return **ONLY 8 to 12** technical skills maximum (no more).
-- Focus **exclusively** on concrete, deep technical skills: programming languages, libraries, frameworks, tools, and platforms that are perfect for asking detailed technical interview questions.
-- Prioritize skills mentioned or clearly implied in the **job_description**.
-- Include relevant strong skills from the CV that match the job.
-- If the CV is empty, sparse, or missing key skills → **add essential modern technical skills** for this role from your knowledge (e.g. for Backend: Node.js, Express, PostgreSQL, Docker, AWS, FastAPI...).
-- This way we always get interview-ready skills even if CV is weak/empty.
+LEVEL MAPPING (use when determining level):
+- Junior: student, fresh grad, < 1 year real experience
+- Mid-level: 1–3 years professional experience
+- Senior: 4+ years, or JD says "Senior" / "Lead" / "4+ years"
 
-CRITICAL EXCLUSIONS (Do NOT include these or similar high-level concepts):
-- "Data Analysis", "Exploratory Data Analysis", "Data Visualization", "Data Preprocessing"
-- "Machine Learning", "Generative AI", "Artificial Intelligence", "Deep Learning", "LLMs"
-- "API Integration", "Problem Solving", "Team Collaboration"
+SKILLS QUALITY RULES:
+- Official names only: "React" not "ReactJS", "Node.js" not "NodeJS"
+- No soft skills (no "Communication", "Teamwork")
+- No duplicates, sorted by relevance
+- Max 15 skills
 
-Good examples of acceptable technical skills (use exact official names):
-- Python, Pandas, NumPy, Scikit-Learn, TensorFlow, PyTorch, Hugging Face, Transformers, LangChain
-- SQL, PostgreSQL, MySQL, Docker, Kubernetes, AWS, GCP, MLflow, FastAPI, Git
-- Feature Engineering, Model Deployment, RAG, Prompt Engineering, Fine-tuning
+CV TEXT:
+{cv_text if not cv_empty else "(empty)"}
 
-- Use official, precise names only (e.g. "PyTorch" not "pytorch", "Node.js" not "nodejs").
-- No duplicates.
-- Sort by importance/relevance to the job_description (most critical skills first).
+JOB DESCRIPTION:
+{job_description if not jd_empty else "(not provided)"}
 
-CV/resume text:
-{cv_text}
-
-Target job_description:
-{job_description}
-
-Analyze carefully and respond with JSON only.
+Return JSON only.
 """
