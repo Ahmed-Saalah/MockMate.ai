@@ -13,7 +13,8 @@ def extract_text_from_pdf(file_path: str) -> str:
         text = text.strip()
 
         if not text:
-            raise ValueError("PDF extraction returned empty text.")
+            logging.warning("PDF extraction returned empty text — proceeding with empty CV")
+            return ""
 
         return text
 

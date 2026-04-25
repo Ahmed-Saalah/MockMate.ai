@@ -1,21 +1,37 @@
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse, JSONResponse
 import logging
-from fastapi.responses import RedirectResponse
 
 from api.routers import cv, feedback
 from api.routers.questions_full import router as questions_full_router
-#from api.routers.questions import router as questions_only_router
+from utils.llm import get_key_manager
+from utils.cache import cache
 
 # Configure root logger
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
 
 app = FastAPI(title="MockMate API Service")
+
 
 @app.get("/", include_in_schema=False)
 def root():
     return RedirectResponse(url="/docs")
 
+
+@app.get("/health", tags=["System"])
+def health():
+    """Key manager status + cache stats — useful for monitoring."""
+    km = get_key_manager()
+    return JSONResponse({
+        "status": "ok",
+        "keys": km.status(),
+        "cache": cache.stats(),
+    })
+
+
 app.include_router(cv.router, tags=["CV Analysis"])
 app.include_router(feedback.router, tags=["Feedback Builder"])
 app.include_router(questions_full_router, tags=["Full Interview"])
-#app.include_router(questions_only_router, tags=["Questions Only"])
