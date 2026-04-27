@@ -9,7 +9,6 @@ from schemas.questions import InterviewQuestions, MCQQuestion, CodingQuestion
 from pydantic import ValidationError
 
 
-# ====================== VALIDATION ======================
 
 def validate_questions(data: InterviewQuestions) -> InterviewQuestions:
     if len(data.mcqQuestions) != 8:
@@ -50,16 +49,15 @@ def validate_questions(data: InterviewQuestions) -> InterviewQuestions:
     return data
 
 
-# ====================== MCQ GENERATION ======================
 
 def _generate_mcq(cv_analysis: dict, job_description: str, max_retries: int = 3) -> list:
     """Generate 8 MCQ questions — runs in a thread."""
-    # Cache check: same cv+jd → same MCQs
+    # Cache: same cv+jd → same MCQs
     ck = cache.make_key("mcq", str(cv_analysis.get("track_name")),
                          str(cv_analysis.get("level")), str(job_description)[:200])
     cached = cache.get(ck)
     if cached is not None:
-        logging.info("✅ MCQ served from cache")
+        logging.info("MCQ served from cache")
         return [MCQQuestion(**q) for q in cached]
 
     prompt = build_mcq_prompt(cv_analysis, job_description)
@@ -101,7 +99,6 @@ def _generate_mcq(cv_analysis: dict, job_description: str, max_retries: int = 3)
             raise
 
 
-# ====================== CODING GENERATION ======================
 
 def _generate_coding(cv_analysis: dict, job_description: str, max_retries: int = 5) -> list:
     """Generate 2 coding questions — runs in a thread."""
@@ -109,7 +106,7 @@ def _generate_coding(cv_analysis: dict, job_description: str, max_retries: int =
                          str(cv_analysis.get("level")), str(job_description)[:200])
     cached = cache.get(ck)
     if cached is not None:
-        logging.info("✅ Coding questions served from cache")
+        logging.info("Coding questions served from cache")
         return [CodingQuestion(**q) for q in cached]
 
     prompt = build_coding_prompt(cv_analysis, job_description)
@@ -128,13 +125,11 @@ def _generate_coding(cv_analysis: dict, job_description: str, max_retries: int =
 
             for q in validated:
                 for tmpl in q.templates:
-                    # Auto-fix single-brace USER_CODE
                     if "{{USER_CODE}}" not in tmpl.driverCode:
                         if "{USER_CODE}" in tmpl.driverCode:
                             logging.warning(f"Auto-fixed single-brace USER_CODE in '{q.title}' lang={tmpl.languageId}")
                             tmpl.driverCode = tmpl.driverCode.replace("{USER_CODE}", "{{USER_CODE}}")
                         else:
-                            # Try to inject it before the main block as a last resort
                             if tmpl.languageId == 71 and 'if __name__' in tmpl.driverCode:
                                 tmpl.driverCode = tmpl.driverCode.replace(
                                     'if __name__', '{{USER_CODE}}\n\nif __name__', 1
@@ -148,13 +143,12 @@ def _generate_coding(cv_analysis: dict, job_description: str, max_retries: int =
                             else:
                                 raise ValueError(f"driverCode '{q.title}' lang={tmpl.languageId}: missing {{{{USER_CODE}}}}")
 
-                    # Auto-fix broken __main__
                     if tmpl.languageId == 71:
                         for bad in ['if _name_ == "_main_":', "if _name_ == '_main_':"]:
                             if bad in tmpl.driverCode:
                                 tmpl.driverCode = tmpl.driverCode.replace(bad, 'if __name__ == "__main__":')
 
-            logging.info("✅ Coding generation successful")
+            logging.info("Coding generation successful")
             cache.set(ck, [q.model_dump() for q in validated], ttl=3600)
             return validated
 
@@ -172,8 +166,6 @@ def _generate_coding(cv_analysis: dict, job_description: str, max_retries: int =
             raise
 
 
-# ====================== PARALLEL ENTRY POINT ======================
-
 async def generate_interview_questions_parallel(cv_analysis: dict, job_description: str = None) -> dict:
     """
     Runs MCQ and coding generation in parallel using a thread pool.
@@ -181,7 +173,7 @@ async def generate_interview_questions_parallel(cv_analysis: dict, job_descripti
     """
     track = cv_analysis.get("track_name", "Unknown")
     level = cv_analysis.get("level", "Unknown")
-    logging.info(f"🚀 Parallel questions generation — {track} / {level}")
+    logging.info(f"Parallel questions generation — {track} / {level}")
 
     loop = asyncio.get_event_loop()
 
@@ -202,11 +194,9 @@ async def generate_interview_questions_parallel(cv_analysis: dict, job_descripti
         codingQuestions=coding_questions,
     )
 
-    logging.info("✅ Parallel interview questions generated successfully")
+    logging.info("Parallel interview questions generated successfully")
     return result.model_dump()
 
-
-# ====================== LEGACY SYNC ENTRY POINT ======================
 
 def generate_interview_questions(cv_analysis: dict, job_description: str = None) -> dict:
     """Sync version — used by the questions-only endpoint."""
@@ -226,7 +216,7 @@ def generate_interview_questions(cv_analysis: dict, job_description: str = None)
             validated = InterviewQuestions(**raw_response)
             validated = validate_questions(validated)
 
-            logging.info("✅ Interview questions generated successfully")
+            logging.info("Interview questions generated successfully")
             return validated.model_dump()
 
         except (ValidationError, ValueError) as e:

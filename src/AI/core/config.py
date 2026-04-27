@@ -6,7 +6,6 @@ load_dotenv()
 
 class Config:
 
-    # Load all 6 keys — filter out empty/missing ones
     GEMINI_API_KEYS = [
         os.getenv("GEMINI_API_KEY_1"),
         os.getenv("GEMINI_API_KEY_2"),
@@ -19,10 +18,8 @@ class Config:
 
     MODEL_NAME = "gemini-2.5-flash"
 
-    # Timeout per LLM call in seconds
     LLM_TIMEOUT_SECONDS = 90
 
-    # CV analysis — small output, fast and precise, no thinking needed
     CV_GENERATION_CONFIG = {
         "response_mime_type": "application/json",
         "temperature": 0.1,
@@ -31,7 +28,6 @@ class Config:
         "thinking_config": {"thinking_budget": 0},
     }
 
-    # Feedback — moderate output
     FEEDBACK_GENERATION_CONFIG = {
         "response_mime_type": "application/json",
         "temperature": 0.1,
@@ -40,7 +36,6 @@ class Config:
         "thinking_config": {"thinking_budget": 0},
     }
 
-    # Questions — largest output, allow some thinking for coding problems
     QUESTIONS_GENERATION_CONFIG = {
         "response_mime_type": "application/json",
         "temperature": 0.1,

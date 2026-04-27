@@ -16,7 +16,6 @@ async def analyze_resume_endpoint(
     try:
         logging.info("Receiving CV file and job description...")
 
-        # Save temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             content = await cv_file.read()
             tmp.write(content)
@@ -28,7 +27,6 @@ async def analyze_resume_endpoint(
         if not cv_text.strip():
             logging.warning("CV text is empty, but job_description is provided → continuing with JD only")
 
-        # Run analysis (job_description is now required)
         result = run_resume_analysis(cv_text, job_description)
 
         return {

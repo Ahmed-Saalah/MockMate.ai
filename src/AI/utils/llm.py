@@ -26,11 +26,7 @@ from utils.key_manager import SmartKeyManager
 from utils.cache import cache
 
 
-# ====================== SINGLETON KEY MANAGER ======================
 _key_manager = SmartKeyManager(Config.GEMINI_API_KEYS)
-
-
-# ====================== JSON CLEANING ======================
 
 def repair_json_string(text: str) -> str:
     text = re.sub(r"```(?:json)?\s*", "", text).strip()
@@ -79,8 +75,6 @@ def safe_json_load(text: str) -> Dict:
         raise ValueError(f"Could not parse JSON after all repair attempts: {e2}") from e2
 
 
-# ====================== RETRY-AFTER PARSER ======================
-
 def _parse_retry_after(error_str: str) -> Optional[int]:
     patterns = [
         r"retryDelay.*?['\"](\d+)s['\"]",
@@ -95,10 +89,8 @@ def _parse_retry_after(error_str: str) -> Optional[int]:
     return None
 
 
-# ====================== CORE ENGINE ======================
 
 def call_llm(prompt: str, config: dict, label: str, use_cache: bool = True) -> Dict:
-    # ── Cache check ────────────────────────────────────────────────────
     cache_key = None
     if use_cache:
         cache_key = cache.make_key(label, prompt[:2000], str(config.get("max_output_tokens")))
@@ -107,7 +99,6 @@ def call_llm(prompt: str, config: dict, label: str, use_cache: bool = True) -> D
             logging.info(f"[Cache] HIT for {label} — skipping Gemini API call")
             return cached
 
-    # ── Build GenerateContentConfig ────────────────────────────────────
     raw_config = {k: v for k, v in config.items() if k != "thinking_config"}
     thinking_budget = config.get("thinking_config", {}).get("thinking_budget", None)
     if thinking_budget is not None:
@@ -231,8 +222,6 @@ def call_llm(prompt: str, config: dict, label: str, use_cache: bool = True) -> D
 
     raise Exception(f"[{label}] All {MAX_ATTEMPTS} attempts exhausted")
 
-
-# ====================== PUBLIC SERVICE FUNCTIONS ======================
 
 def analyze_resume(prompt: str) -> Dict:
     return call_llm(prompt, Config.CV_GENERATION_CONFIG, "CV Analysis", use_cache=True)

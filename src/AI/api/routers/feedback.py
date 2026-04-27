@@ -1,4 +1,3 @@
-# AI/api/routers/feedback.py
 import json
 from fastapi import APIRouter, HTTPException
 from services.feedback_service import generate_feedback
@@ -17,7 +16,7 @@ def feedback_endpoint(interview_data: dict):
 
        
         return {
-            "feedback": feedback  
+            "feedback": json.dumps(feedback)  
         }
 
     except ValueError as ve:

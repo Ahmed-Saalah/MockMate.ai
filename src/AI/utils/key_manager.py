@@ -15,10 +15,10 @@ from typing import Optional
 @dataclass
 class KeyState:
     key: str
-    available_at: float = 0.0          # epoch timestamp when key is usable again
+    available_at: float = 0.0          
     consecutive_failures: int = 0
     circuit_open: bool = False
-    circuit_open_until: float = 0.0    # auto-reset circuit after this time
+    circuit_open_until: float = 0.0    
     last_used: float = 0.0
     total_calls: int = 0
     total_failures: int = 0
@@ -33,9 +33,9 @@ class SmartKeyManager:
     - LRU selection: prefers key used least recently
     """
 
-    CIRCUIT_OPEN_THRESHOLD = 3       # consecutive failures before circuit opens
-    CIRCUIT_RESET_SECONDS = 120      # auto-reset open circuit after 2 min
-    DEFAULT_COOLDOWN = 65            # seconds to wait after a 429 with no retry-after
+    CIRCUIT_OPEN_THRESHOLD = 3       
+    CIRCUIT_RESET_SECONDS = 120      
+    DEFAULT_COOLDOWN = 65            
 
     def __init__(self, keys: list[str]):
         if not keys:
@@ -44,9 +44,6 @@ class SmartKeyManager:
         self._lock = threading.Lock()
         logging.info(f"[KeyManager] Initialized with {len(keys)} keys")
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
 
     def get_available_key(self) -> Optional[str]:
         """Return the best available key (LRU among non-blocked keys), or None."""
@@ -54,7 +51,6 @@ class SmartKeyManager:
             now = time.time()
             candidates = []
             for state in self._states.values():
-                # Auto-reset circuit breaker if enough time has passed
                 if state.circuit_open and now >= state.circuit_open_until:
                     logging.info(f"[KeyManager] Circuit reset for key ...{state.key[-6:]}")
                     state.circuit_open = False
@@ -69,7 +65,6 @@ class SmartKeyManager:
             if not candidates:
                 return None
 
-            # Prefer the key that was used least recently
             best = min(candidates, key=lambda s: s.last_used)
             best.last_used = now
             best.total_calls += 1
@@ -104,7 +99,7 @@ class SmartKeyManager:
             state = self._states.get(key)
             if not state:
                 return
-            state.available_at = time.time() + 5   # short 5-second pause
+            state.available_at = time.time() + 5   
             state.consecutive_failures += 1
             state.total_failures += 1
 

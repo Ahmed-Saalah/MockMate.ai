@@ -11,14 +11,12 @@ def run_resume_analysis(cv_text: str, job_description: str) -> dict:
     if not cv_text or len(cv_text.strip()) == 0:
         logging.warning("CV text is empty. Proceeding with job_description only.")
 
-    # Prevent very large prompts
     cv_text = cv_text[:15000]
 
-    # ── Cache check: same CV + JD → same analysis ──────────────────────
     ck = cache.make_key("cv_analysis", cv_text[:500], job_description[:200])
     cached = cache.get(ck)
     if cached is not None:
-        logging.info("✅ CV analysis served from cache")
+        logging.info("CV analysis served from cache")
         return cached
 
     prompt = build_prompt(cv_text, job_description)
@@ -31,8 +29,7 @@ def run_resume_analysis(cv_text: str, job_description: str) -> dict:
             response = validate_cv_output(response)
             validated = ResumeAnalysis(**response)
             result = validated.dict()
-            logging.info("✅ CV analysis successful")
-            # Cache for 2 hours
+            logging.info("CV analysis successful")
             cache.set(ck, result, ttl=7200)
             return result
 

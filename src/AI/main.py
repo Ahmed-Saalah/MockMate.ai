@@ -7,7 +7,6 @@ from api.routers.questions_full import router as questions_full_router
 from utils.llm import get_key_manager
 from utils.cache import cache
 
-# Configure root logger
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",

@@ -21,10 +21,6 @@ class TTLCache:
         self._lock = threading.Lock()
         self._max_size = max_size
 
-    # ------------------------------------------------------------------
-    # Core operations
-    # ------------------------------------------------------------------
-
     def get(self, key: str) -> Optional[Any]:
         with self._lock:
             entry = self._store.get(key)
@@ -38,7 +34,6 @@ class TTLCache:
 
     def set(self, key: str, value: Any, ttl: int = 3600):
         with self._lock:
-            # Evict oldest entries if at capacity
             if len(self._store) >= self._max_size:
                 oldest_key = min(self._store, key=lambda k: self._store[k][1])
                 del self._store[oldest_key]
@@ -53,10 +48,6 @@ class TTLCache:
         with self._lock:
             self._store.clear()
 
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
-
     def make_key(self, *parts: str) -> str:
         """Create a stable cache key from arbitrary string parts."""
         combined = "|".join(str(p) for p in parts)
@@ -69,5 +60,4 @@ class TTLCache:
             return {"total": len(self._store), "alive": alive, "max_size": self._max_size}
 
 
-# Singleton — import this everywhere
 cache = TTLCache(max_size=512)

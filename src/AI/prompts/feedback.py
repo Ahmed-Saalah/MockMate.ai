@@ -1,4 +1,3 @@
-# AI/prompts/feedback.py
 import json
 
 def build_feedback_prompt(interview_data):

@@ -20,7 +20,6 @@ async def generate_full_interview(
     try:
         logging.info("📥 Starting Full Interview Generation...")
 
-        # ── 1. Save & extract PDF (fast, no LLM) ──────────────────────────
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             content = await cv_file.read()
             tmp.write(content)
@@ -30,15 +29,13 @@ async def generate_full_interview(
         os.remove(temp_path)
 
         if not cv_text.strip():
-            logging.warning("⚠️ CV is empty — will rely on JD only for analysis")
+            logging.warning("CV is empty — will rely on JD only for analysis")
             cv_text = ""
 
-        # ── 2. CV analysis (fast LLM call — thinking disabled) ─────────────
         cv_analysis = await asyncio.get_event_loop().run_in_executor(
             None, run_resume_analysis, cv_text, job_description
         )
 
-        # ── 3. MCQ + Coding in parallel (the heavy part) ───────────────────
         questions = await generate_interview_questions_parallel(
             cv_analysis=cv_analysis,
             job_description=job_description,
@@ -49,5 +46,5 @@ async def generate_full_interview(
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"❌ Full interview error: {e}")
+        logging.error(f"Full interview error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
