@@ -13,4 +13,9 @@ public interface IAiServiceClient
         FeedbackRequest request,
         CancellationToken cancellationToken = default
     );
+
+    Task<GenerateInterviewResponse?> GenerateInterviewAsync(
+        CandidateProfileRequest request,
+        CancellationToken cancellationToken = default
+    );
 }
