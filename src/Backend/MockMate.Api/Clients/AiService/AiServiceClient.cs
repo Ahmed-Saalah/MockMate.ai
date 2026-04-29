@@ -20,7 +20,7 @@ public class AiServiceClient(HttpClient httpClient, ILogger<AiServiceClient> log
             pdfContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
             content.Add(pdfContent, "cv_file", "cv.pdf");
 
-            var jobDescContent = new StringContent(request.JobDescription);
+            var jobDescContent = new StringContent(request.JobDescription ?? string.Empty);
             content.Add(jobDescContent, "job_description");
 
             var response = await httpClient.PostAsync("/analyze", content, cancellationToken);
@@ -81,6 +81,53 @@ public class AiServiceClient(HttpClient httpClient, ILogger<AiServiceClient> log
             logger.LogError(
                 ex,
                 "An unexpected error occurred while communicating with the AI Service for interview feedback."
+            );
+            throw;
+        }
+    }
+
+    public async Task<GenerateInterviewResponse?> GenerateInterviewAsync(
+        CandidateProfileRequest request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            using var content = new MultipartFormDataContent();
+
+            var pdfContent = new StreamContent(request.CV);
+            pdfContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+            content.Add(pdfContent, "cv_file", "cv.pdf");
+
+            var jobDescContent = new StringContent(request.JobDescription ?? string.Empty);
+            content.Add(jobDescContent, "job_description");
+
+            // Custom timeout of 60 seconds for this long-running generation request
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            cts.CancelAfter(TimeSpan.FromSeconds(60));
+
+            var response = await httpClient.PostAsync("/interview/full", content, cts.Token);
+
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadFromJsonAsync<GenerateInterviewResponse>(
+                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true },
+                cancellationToken: cts.Token
+            );
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogError(
+                ex,
+                "HTTP error occurred while calling the AI Service for generating an interview."
+            );
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "An unexpected error occurred while communicating with the AI Service."
             );
             throw;
         }

@@ -8,6 +8,7 @@ public class Question
     public string SeniorityLevel { get; set; } = string.Empty;
     public string QuestionType { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public bool IsAiGenerated { get; set; }
     public ICollection<Skill> Skills { get; set; } = new List<Skill>();
     public ICollection<McqOption> Options { get; set; } = new List<McqOption>();
     public ICollection<TestCase> TestCases { get; set; } = new List<TestCase>();

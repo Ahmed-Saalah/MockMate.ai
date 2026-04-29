@@ -13,6 +13,7 @@ public class QuestionConfig : IEntityTypeConfiguration<Question>
         builder.Property(q => q.Text).IsRequired();
         builder.Property(q => q.SeniorityLevel).IsRequired().HasMaxLength(50);
         builder.Property(q => q.QuestionType).IsRequired().HasMaxLength(20);
+        builder.Property(q => q.IsAiGenerated).HasDefaultValue(false);
 
         builder
             .HasMany(q => q.Options)
