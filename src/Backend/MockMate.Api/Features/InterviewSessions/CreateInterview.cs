@@ -156,6 +156,7 @@ public sealed class CreateInterview
                 UserId = request.UserId,
                 TrackName = detectedTrack,
                 SeniorityLevel = detectedLevel,
+		InterviewType = InterviewTypes.Standard,
                 StartDate = DateTime.UtcNow,
                 Answers = mcqQuestions
                     .Select(q => new SessionAnswer { QuestionId = q.QuestionId })
