@@ -262,6 +262,7 @@ public sealed class CreateAiInterview
                 UserId = request.UserId,
                 TrackName = aiResponse.TrackName,
                 SeniorityLevel = aiResponse.SeniorityLevel,
+		InterviewType = InterviewTypes.AiGenerated,
                 StartDate = DateTime.UtcNow,
                 Answers = mcqQuestionEntities
                     .Select(q => new SessionAnswer { QuestionId = q.Id })

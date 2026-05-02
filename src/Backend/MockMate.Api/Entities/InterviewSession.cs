@@ -7,6 +7,7 @@ public class InterviewSession
     public User User { get; set; } = null!;
     public string TrackName { get; set; } = string.Empty;
     public string SeniorityLevel { get; set; } = string.Empty;
+    public string InterviewType { get; set; } = InterviewTypes.Standard;
     public DateTime StartDate { get; set; } = DateTime.UtcNow;
     public DateTime? EndDate { get; set; }
     public string? Feedback { get; set; }
