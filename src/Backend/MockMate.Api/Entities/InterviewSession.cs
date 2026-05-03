@@ -1,4 +1,6 @@
-﻿namespace MockMate.Api.Entities;
+﻿using MockMate.Api.Constants;
+
+namespace MockMate.Api.Entities;
 
 public class InterviewSession
 {
