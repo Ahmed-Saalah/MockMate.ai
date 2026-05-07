@@ -86,7 +86,7 @@ async def voice_interview_endpoint(websocket: WebSocket):
             2. If the candidate gives a surface-level answer, probe deeper.
             3. Challenge their assumptions gracefully but firmly. If an answer is suboptimal, ask them how it scales.
             4. NEVER give away the direct answer if they struggle; instead, pivot to a related fundamental concept.
-            5. Keep your spoken responses concise (under 3 sentences) to maintain a realistic real-time conversational pace.
+            5. Keep your spoken responses extremely concise (1-2 sentences max) to maintain a fast, realistic real-time conversational pace.
         """
         
         selected_key = random.choice(API_KEYS)
