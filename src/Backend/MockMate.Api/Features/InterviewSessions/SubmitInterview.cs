@@ -130,9 +130,6 @@ public sealed class SubmitInterview
             decimal percentage =
                 totalQuestions == 0 ? 0 : Math.Round((decimal)totalScore / totalQuestions * 100, 2);
 
-            interview.Score = (int)Math.Round(percentage);
-            interview.EndDate = DateTime.UtcNow;
-
             var aiResponse = await aiServiceClient.GetInterviewFeedbackAsync(
                 new FeedbackRequest(
                     InterviewId: interview.Id,
@@ -142,7 +139,9 @@ public sealed class SubmitInterview
                 cancellationToken
             );
 
-            interview.Feedback = aiResponse?.Feedback;
+            interview.Score = (int)Math.Round(percentage);
+            interview.Feedback = aiResponse.Feedback;
+            interview.EndDate = DateTime.UtcNow;
             await context.SaveChangesAsync(cancellationToken);
 
             return new Response(interview.Score, interview.Feedback);
