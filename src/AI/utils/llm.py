@@ -168,7 +168,7 @@ def call_llm(prompt: str, config: dict, label: str, use_cache: bool = True) -> D
                     raise ValueError("Parsed JSON is a list, expected a dict")
 
             _key_manager.mark_success(api_key)
-            logging.info(f"[{label}] ✅ Success on attempt {attempt+1}")
+            logging.info(f"[{label}]  Success on attempt {attempt+1}")
 
             if use_cache and cache_key:
                 ttl = 7200 if "CV" in label else 3600
