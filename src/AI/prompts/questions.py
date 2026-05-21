@@ -65,26 +65,26 @@ def build_coding_prompt(cv_analysis: dict, job_description: str = None) -> str:
         _base_header(track, seniority_level)
         + jd_line
         + "RULES FOR defaultCode (THE SKELETON THE CANDIDATE SEES):\n"
-        "- defaultCode contains ONLY the Solution class — nothing else\n"
-        "- NO imports, NO helper classes, NO extra code outside Solution\n"
+        "- defaultCode MUST include all common/standard packages and libraries the candidate might need at the top.\n"
+        "- Inside defaultCode, after the imports, it contains ONLY the Solution class — nothing else.\n"
+        "- NO helper classes or extra code outside Solution.\n"
         "- The method body must contain ONLY the skeleton comment and return stub\n"
-        "- CORRECT Python: \"class Solution:\\n    def method(self, data: list) -> list:\\n        # Write your code here\\n        pass\"\n"
-        "- CORRECT C#: \"public class Solution {\\n    public List<double> Method(List<double> data) {\\n        // Write your code here\\n        return new List<double>();\\n    }\\n}\"\n\n"
+        "- CORRECT C++: \"#include <iostream>\\n#include <vector>\\n#include <string>\\n#include <algorithm>\\n#include <map>\\n#include <set>\\n#include <queue>\\n#include <stack>\\nusing namespace std;\\n\\nclass Solution {\\npublic:\\n    vector<double> method(vector<double>& data) {\\n        // Write your code here\\n        return {};\\n    }\\n};\"\n"
+        "- CORRECT Java: \"import java.util.*;\\nimport java.io.*;\\nimport java.util.stream.*;\\n\\npublic class Solution {\\n    public List<Double> method(List<Double> data) {\\n        // Write your code here\\n        return new ArrayList<>();\\n    }\\n}\"\n\n"
         "RULES FOR driverCode (THE HARNESS THAT RUNS THE CANDIDATE CODE):\n"
-        "- Layout: imports → {{USER_CODE}} → main/runner block\n"
+        "- Layout: imports/headers → {{USER_CODE}} → main/runner block\n"
         "- Write the placeholder EXACTLY as {{USER_CODE}} — two opening braces, USER_CODE, two closing braces\n"
         "- {{USER_CODE}} must appear BEFORE the main/runner block\n"
         "- testCases input is a raw value (e.g. a list, a number) — NOT a JSON object with named keys\n"
         "- The driverCode reads stdin, parses it, calls Solution, and prints the result\n"
-        "- PYTHON ENTRY POINT must use DOUBLE underscores: if __name__ == \"__main__\":\n\n"
-        "CORRECT PYTHON EXAMPLE (input is a list of numbers):\n"
-        "  defaultCode: \"class Solution:\\n    def min_max_normalize(self, data: list[float]) -> list[float]:\\n        # Write your code here\\n        pass\"\n"
-        "  driverCode: \"import json\\nimport sys\\n{{USER_CODE}}\\nif __name__ == \\\"__main__\\\":\\n    input_data = json.loads(sys.stdin.read().strip())\\n    result = Solution().min_max_normalize(input_data)\\n    print(json.dumps(result))\"\n"
+        "CORRECT C++ EXAMPLE (input is a list of numbers):\n"
+        "  defaultCode: \"#include <iostream>\\n#include <vector>\\n#include <string>\\n#include <algorithm>\\nusing namespace std;\\n\\nclass Solution {\\npublic:\\n    vector<double> min_max_normalize(vector<double>& data) {\\n        // Write your code here\\n        return {};\\n    }\\n};\"\n"
+        "  driverCode: \"#include <iostream>\\n#include <vector>\\n#include <string>\\n#include <sstream>\\n{{USER_CODE}}\\nint main() {\\n    string input;\\n    if (getline(cin, input)) {\\n        // parse input string to vector, call Solution, print output\\n    }\\n    return 0;\\n}\"\n"
         "  testCase input: \"[1, 2, 3, 4, 5]\"\n"
         "  testCase output: \"[0.0, 0.25, 0.5, 0.75, 1.0]\"\n\n"
-        "CORRECT C# EXAMPLE (input is a list of numbers):\n"
-        "  defaultCode: \"public class Solution {\\n    public List<double> MinMaxNormalize(List<double> data) {\\n        // Write your code here\\n        return new List<double>();\\n    }\\n}\"\n"
-        "  driverCode: \"using System;\\nusing System.Collections.Generic;\\nusing System.Linq;\\n{{USER_CODE}}\\npublic class Program {\\n    public static void Main(string[] args) {\\n        string inputLine = Console.ReadLine();\\n        List<double> data = inputLine.Trim('[', ']').Split(',').Select(double.Parse).ToList();\\n        List<double> result = new Solution().MinMaxNormalize(data);\\n        Console.WriteLine(\\\"[\\\" + string.Join(\\\", \\\", result) + \\\"]\\\");\\n    }\\n}\"\n"
+        "CORRECT JAVA EXAMPLE (input is a list of numbers):\n"
+        "  defaultCode: \"import java.util.*;\\nimport java.io.*;\\n\\npublic class Solution {\\n    public List<Double> minMaxNormalize(List<Double> data) {\\n        // Write your code here\\n        return new ArrayList<>();\\n    }\\n}\"\n"
+        "  driverCode: \"import java.util.*;\\nimport java.io.*;\\n{{USER_CODE}}\\npublic class Program {\\n    public static void Main(string[] args) throws Exception {\\n        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));\\n        String input = br.readLine();\\n        // parse input, call Solution, print output\\n    }\\n}\"\n"
         "  testCase input: \"[1, 2, 3, 4, 5]\"\n"
         "  testCase output: \"[0.0, 0.25, 0.5, 0.75, 1.0]\"\n\n"
         "Generate exactly 2 coding questions relevant to the candidate's track and level.\n\n"
@@ -100,14 +100,14 @@ def build_coding_prompt(cv_analysis: dict, job_description: str = None) -> str:
         '      ],\n'
         '      "templates": [\n'
         '        {\n'
-        '          "languageId": 51,\n'
-        '          "defaultCode": "Solution class skeleton — NO imports — NO logic",\n'
-        '          "driverCode": "imports + {{USER_CODE}} + Program.Main that reads raw stdin"\n'
+        '          "languageId": 54,\n'
+        '          "defaultCode": "Common C++ headers (#include) + Solution class skeleton — NO logic",\n'
+        '          "driverCode": "headers + {{USER_CODE}} + int main() block that reads raw stdin"\n'
         '        },\n'
         '        {\n'
-        '          "languageId": 71,\n'
-        '          "defaultCode": "Solution class skeleton — NO imports — NO logic",\n'
-        '          "driverCode": "import json\\nimport sys\\n{{USER_CODE}}\\nif __name__ == \\"__main__\\": block that reads raw stdin"\n'
+        '          "languageId": 62,\n'
+        '          "defaultCode": "Common Java imports + public class Solution skeleton — NO logic",\n'
+        '          "driverCode": "imports + {{USER_CODE}} + public class Program with main method that reads raw stdin"\n'
         '        }\n'
         '      ]\n'
         '    }\n'
@@ -115,12 +115,10 @@ def build_coding_prompt(cv_analysis: dict, job_description: str = None) -> str:
         '}\n\n'
         "CHECKLIST:\n"
         "[ ] codingQuestions has exactly 2 items\n"
-        "[ ] defaultCode is skeleton only — ONLY Solution class, no imports, no logic\n"
-        "[ ] driverCode contains {{USER_CODE}} with DOUBLE braces\n"
+        "[ ] defaultCode includes all common libraries/packages at the top, followed ONLY by the Solution class skeleton\n"        "[ ] driverCode contains {{USER_CODE}} with DOUBLE braces\n"
         "[ ] {{USER_CODE}} appears BEFORE the main/runner block\n"
         "[ ] testCase input/output are raw values as strings (not JSON objects with named keys)\n"
         "[ ] driverCode reads raw stdin directly (not json.loads of a named-key object)\n"
-        "[ ] Python driverCode uses if __name__ == \"__main__\": with DOUBLE underscores\n"
         "[ ] All code strings are single-line — newlines encoded as \\n\n"
         "[ ] Output is valid JSON — no markdown, no trailing commas\n"
     )
@@ -144,11 +142,10 @@ def build_questions_prompt(cv_analysis: dict, job_description: str = None) -> st
         "MCQ RULES:\n"
         "- Each MCQ has between 3 and 5 options and exactly 1 correct answer\n\n"
         "CODING RULES:\n"
-        "- defaultCode: ONLY the Solution class skeleton — no imports, no logic\n"
-        "- driverCode: imports → {{USER_CODE}} → main block that reads raw stdin\n"
+        "- defaultCode: MUST include all common/standard packages and libraries at the top, followed ONLY by the Solution class skeleton — no logic\n"
+        "- driverCode: imports/headers → {{USER_CODE}} → main block that reads raw stdin\n"
         "- testCase input/output: raw values as strings (e.g. '[1,2,3]'), NOT JSON objects\n"
         "- {{USER_CODE}} must appear BEFORE the main block — use DOUBLE braces\n"
-        "- Python entry point: if __name__ == \"__main__\": with DOUBLE underscores\n\n"
         "YOU MUST RETURN THIS EXACT JSON STRUCTURE:\n\n"
         "{\n"
         '  "trackName": "' + track + '",\n'
@@ -175,15 +172,15 @@ def build_questions_prompt(cv_analysis: dict, job_description: str = None) -> st
         '      ],\n'
         '      "templates": [\n'
         '        {\n'
-        '          "languageId": 51,\n'
-        '          "defaultCode": "public class Solution {\\n    public List<double> Method(List<double> data) {\\n        // Write your code here\\n        return new List<double>();\\n    }\\n}",\n'
-        '          "driverCode": "using System;\\nusing System.Collections.Generic;\\nusing System.Linq;\\n{{USER_CODE}}\\npublic class Program {\\n    public static void Main(string[] args) {\\n        string inputLine = Console.ReadLine();\\n        // parse inputLine → call Solution → print result\\n    }\\n}"\n'
+        '          "languageId": 54,\n'
+        '          "defaultCode": "#include <iostream>\\n#include <vector>\\n#include <string>\\n#include <algorithm>\\nusing namespace std;\\n\\nclass Solution {\\npublic:\\n    vector<double> method(vector<double>& data) {\\n        // Write your code here\\n        return {};\\n    }\\n};",\n'
+        '          "driverCode": "#include <iostream>\\n#include <vector>\\n#include <string>\\n{{USER_CODE}}\\nint main() {\\n    string inputLine = Console.ReadLine();\\n    // parse inputLine → call Solution → print result\\n    return 0;\\n}"\n'
         '        },\n'
         '        {\n'
-        '          "languageId": 71,\n'
-        '          "defaultCode": "class Solution:\\n    def method(self, data: list) -> list:\\n        # Write your code here\\n        pass",\n'
-        '          "driverCode": "import json\\nimport sys\\n{{USER_CODE}}\\nif __name__ == \\"__main__\\":\\n    input_data = json.loads(sys.stdin.read().strip())\\n    result = Solution().method(input_data)\\n    print(json.dumps(result))"\n'
-        '        }\n'
+        '          "languageId": 62,\n'
+        '          "defaultCode": "import java.util.*;\\nimport java.io.*;\\n\\npublic class Solution {\\n    public List<Double> method(List<Double> data) {\\n        // Write your code here\\n        return new ArrayList<>();\\n    }\\n}",\n'
+        '          "driverCode": "import java.util.*;\\nimport java.io.*;\\n{{USER_CODE}}\\npublic class Program {\\n    public static void main(String[] args) throws Exception {\\n        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));\\n        String inputLine = br.readLine();\\n        // parse inputLine → call Solution → print result\\n    }\\n}"\n'
+        '        }\\n'
         '      ]\n'
         '    }\n'
         '  ]\n'
@@ -192,10 +189,9 @@ def build_questions_prompt(cv_analysis: dict, job_description: str = None) -> st
         "[ ] mcqQuestions has exactly 8 items\n"
         "[ ] codingQuestions has exactly 2 items\n"
         "[ ] Each MCQ has exactly 1 isCorrect=true option\n"
-        "[ ] defaultCode is skeleton only — ONLY Solution class\n"
-        "[ ] driverCode contains {{USER_CODE}} with DOUBLE braces before main block\n"
+        "[ ] defaultCode includes all common libraries/packages at the top, followed ONLY by the Solution class skeleton\n"
+        "[ ] driverCode contains {{USER_CODE}} with DOUBLE braces before main block\n""[ ] testCase input/output are raw values as strings\n"
         "[ ] testCase input/output are raw values as strings\n"
-        "[ ] Python uses if __name__ == \"__main__\": with DOUBLE underscores\n"
         "[ ] All code strings single-line with \\n for newlines\n"
         "[ ] Output is valid JSON — no markdown, no trailing commas\n"
     )

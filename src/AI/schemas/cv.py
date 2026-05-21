@@ -13,6 +13,7 @@ VALID_TRACKS = [
     "Full-Stack Development",
     "Mobile Development",
     "AI & Machine Learning Engineering",
+    "Cybersecurity Engineering",
     "General Software Engineer",
 ]
 VALID_LEVELS = ["Junior", "Mid-level", "Senior"]

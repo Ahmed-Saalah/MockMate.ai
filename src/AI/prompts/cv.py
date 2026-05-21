@@ -5,6 +5,7 @@ def build_prompt(cv_text: str, job_description: str) -> str:
         "Full-Stack Development",
         "Mobile Development",
         "AI & Machine Learning Engineering",
+        "Cybersecurity Engineering",
         "General Software Engineer",
     ]
     allowed_tracks_str = ", ".join(f'"{t}"' for t in allowed_tracks)
@@ -19,7 +20,7 @@ def build_prompt(cv_text: str, job_description: str) -> str:
     elif not cv_empty and jd_empty:
         scenario = "SCENARIO 1: CV has skills, JD is missing or unclear.\n- Determine track, level, and skills ENTIRELY from the CV."
     else:
-        scenario = "SCENARIO 4: CV is empty and JD is missing or unclear.\n- Set track_name to 'General Software Engineer'.\n- Set level to 'Junior'.\n- Set technical_skills to core software engineering skills: Python, Git, SQL, REST APIs, Docker, Data Structures, Algorithms, Linux."
+        scenario = "SCENARIO 4: CV is empty and JD is missing or unclear.\n- Set track_name to 'General Software Engineer'.\n- Set level to 'Junior'.\n- Set technical_skills to core software engineering skills: Python, Git, SQL, REST APIs, Docker, Data Structures, Algorithms, Linux, Network Security, Information Security."
 
     return f"""You are a senior technical recruiter and expert AI resume analyst.
 
@@ -41,6 +42,7 @@ TRACK MAPPING (use when determining track):
 - Both frontend + backend → "Full-Stack Development"
 - Flutter / iOS / Android / React Native → "Mobile Development"
 - ML / AI / Data Science / LLMs / Computer Vision / NLP / Data Scientist → "AI & Machine Learning Engineering"
+- Cybersecurity / Penetration Testing / Ethical Hacking / DevSecOps / SOC / Information Security / Cryptography → "Cybersecurity Engineering"
 - Cannot be determined → "General Software Engineer"
 - Must be character-for-character exact match.
 
@@ -50,7 +52,7 @@ LEVEL MAPPING (use when determining level):
 - Senior: 4+ years, or JD says "Senior" / "Lead" / "4+ years"
 
 SKILLS QUALITY RULES:
-- Official names only: "React" not "ReactJS", "Node.js" not "NodeJS"
+- Official names only: "React" not "ReactJS", "Node.js" not "NodeJS" , "Wireshark" not "WireShark"
 - No soft skills (no "Communication", "Teamwork")
 - No duplicates, sorted by relevance
 - Max 15 skills
