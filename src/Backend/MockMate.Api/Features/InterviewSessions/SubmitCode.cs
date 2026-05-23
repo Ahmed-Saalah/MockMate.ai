@@ -132,6 +132,14 @@ public sealed class SubmitCode
                     cancellationToken
                 );
             }
+            catch (MockMate.Api.Clients.Judge0.Exceptions.Judge0TooManyRequestsException ex)
+            {
+                return new TooManyRequestsError(ex.Message);
+            }
+            catch (MockMate.Api.Clients.Judge0.Exceptions.Judge0ServiceException ex)
+            {
+                return new ServiceUnavailableError(ex.Message);
+            }
             catch (Exception)
             {
                 return new ServiceUnavailableError();

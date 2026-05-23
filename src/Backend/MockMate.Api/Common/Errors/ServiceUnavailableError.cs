@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using MockMate.Api.Common.Errors;
 using MockMate.Api.Common.Http;
 
@@ -9,6 +9,10 @@ public class ServiceUnavailableError : DomainError
 {
     public override string Code => "service_unavailable";
 
-    public override string Message =>
-        "The service is currently unavailable. Please try again later.";
+    public override string Message { get; }
+
+    public ServiceUnavailableError(string message = "The service is currently unavailable. Please try again later.")
+    {
+        Message = message;
+    }
 }
