@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using MockMate.Api.Clients.Judge0.Exceptions;
 using MockMate.Api.Common.Endpoints;
 using MockMate.Api.Common.Errors;
 using MockMate.Api.Common.Http;
@@ -126,6 +127,14 @@ public sealed class RunCode
                     testCases,
                     cancellationToken
                 );
+            }
+            catch (Judge0TooManyRequestsException ex)
+            {
+                return new TooManyRequestsError(ex.Message);
+            }
+            catch (Judge0ServiceException ex)
+            {
+                return new ServiceUnavailableError(ex.Message);
             }
             catch (Exception)
             {
