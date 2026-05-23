@@ -67,7 +67,7 @@ def build_coding_prompt(cv_analysis: dict, job_description: str = None) -> str:
         "- NO helper classes or extra code outside Solution.\n"
         "- The method body must contain ONLY the skeleton comment and return stub\n"
         "- CORRECT C++: \"#include <iostream>\\n#include <vector>\\n#include <string>\\n#include <algorithm>\\n#include <map>\\n#include <set>\\n#include <queue>\\n#include <stack>\\nusing namespace std;\\n\\nclass Solution {\\npublic:\\n    vector<double> method(vector<double>& data) {\\n        // Write your code here\\n        return {};\\n    }\\n};\"\n"
-        "- CORRECT Java: \"import java.util.*;\\nimport java.io.*;\\nimport java.util.stream.*;\\n\\npublic class Solution {\\n    public List<Double> method(List<Double> data) {\\n        // Write your code here\\n        return new ArrayList<>();\\n    }\\n}\"\n\n"
+        "- CORRECT Java: \"import java.util.*;\\nimport java.io.*;\\nimport java.util.stream.*;\\n\\nclass Solution {\\n    public List<Double> method(List<Double> data) {\\n        // Write your code here\\n        return new ArrayList<>();\\n    }\\n}\"\n\n"
         "RULES FOR driverCode (THE HARNESS THAT RUNS THE CANDIDATE CODE):\n"
         "- Layout: {{USER_CODE}} → main/runner block\n"
         "- Write the placeholder EXACTLY as {{USER_CODE}} — two opening braces, USER_CODE, two closing braces\n"
@@ -81,8 +81,8 @@ def build_coding_prompt(cv_analysis: dict, job_description: str = None) -> str:
         "  testCase input: \"1 2 3 4 5\"\n"
         "  testCase output: \"0.0 0.25 0.5 0.75 1.0\"\n\n"
         "CORRECT JAVA EXAMPLE (input is a list of space-separated numbers):\n"
-        "  defaultCode: \"import java.util.*;\\nimport java.io.*;\\n\\npublic class Solution {\\n    public List<Double> minMaxNormalize(List<Double> data) {\\n        // Write your code here\\n        return new ArrayList<>();\\n    }\\n}\"\n"
-        "  driverCode: \"{{USER_CODE}}\\npublic class Main {\\n    public static void main(String[] args) {\\n        Scanner sc = new Scanner(System.in);\\n        List<Double> data = new ArrayList<>();\\n        while (sc.hasNextDouble()) data.add(sc.nextDouble());\\n        List<Double> result = new Solution().minMaxNormalize(data);\\n        for (int i = 0; i < result.size(); i++) System.out.print(result.get(i) + (i == result.size() - 1 ? \\\"\\\" : \\\" \\\"));\\n        System.out.println();\\n    }\\n}\"\n"
+        "  defaultCode: \"import java.util.*;\\nimport java.io.*;\\n\\nclass Solution {\\n    public List<Double> minMaxNormalize(List<Double> data) {\\n        // Write your code here\\n        return new ArrayList<>();\\n    }\\n}\"\n"
+        "  driverCode: \"import java.util.*;\\nimport java.io.*;\\n{{USER_CODE}}\\npublic class Main {\\n    public static void main(String[] args) {\\n        Scanner sc = new Scanner(System.in);\\n        List<Double> data = new ArrayList<>();\\n        while (sc.hasNextDouble()) data.add(sc.nextDouble());\\n        List<Double> result = new Solution().minMaxNormalize(data);\\n        for (int i = 0; i < result.size(); i++) System.out.print(result.get(i) + (i == result.size() - 1 ? \\\"\\\" : \\\" \\\"));\\n        System.out.println();\\n    }\\n}\"\n"
         "  testCase input: \"1 2 3 4 5\"\n"
         "  testCase output: \"0.0 0.25 0.5 0.75 1.0\"\n\n"
         "Generate exactly 2 coding questions relevant to the candidate's track and level.\n\n"
@@ -104,8 +104,8 @@ def build_coding_prompt(cv_analysis: dict, job_description: str = None) -> str:
         '        },\n'
         '        {\n'
         '          "languageId": 62,\n'
-        '          "defaultCode": "import java.util.*;\\nimport java.io.*;\\n\\npublic class Solution {\\n    public List<Double> method(List<Double> data) {\\n        // Write your code here\\n        return new ArrayList<>();\\n    }\\n}",\n'
-        '          "driverCode": "{{USER_CODE}}\\npublic class Main {\\n    public static void main(String[] args) {\\n        Scanner sc = new Scanner(System.in); List<Double> data = new ArrayList<>();\\n        while(sc.hasNextDouble()) data.add(sc.nextDouble());\\n        List<Double> result = new Solution().method(data);\\n        for(int i=0; i<result.size(); i++) System.out.print(result.get(i) + (i==result.size()-1 ? \\\"\\\" : \\\" \\\")); System.out.println();\\n    }\\n}"\n'
+        '          "defaultCode": "import java.util.*;\\nimport java.io.*;\\n\\nclass Solution {\\n    public List<Double> method(List<Double> data) {\\n        // Write your code here\\n        return new ArrayList<>();\\n    }\\n}",\n'
+        '          "driverCode": "import java.util.*;\\nimport java.io.*;\\n{{USER_CODE}}\\npublic class Main {\\n    public static void main(String[] args) {\\n        Scanner sc = new Scanner(System.in); List<Double> data = new ArrayList<>();\\n        while(sc.hasNextDouble()) data.add(sc.nextDouble());\\n        List<Double> result = new Solution().method(data);\\n        for(int i=0; i<result.size(); i++) System.out.print(result.get(i) + (i==result.size()-1 ? \\\"\\\" : \\\" \\\")); System.out.println();\\n    }\\n}"\n'
         '        }\n'
         '      ]\n'
         '    }\n'
@@ -114,8 +114,11 @@ def build_coding_prompt(cv_analysis: dict, job_description: str = None) -> str:
         "CHECKLIST:\n"
         "[ ] codingQuestions has exactly 2 items\n"
         "[ ] defaultCode includes all common libraries/packages at the top, followed ONLY by the Solution class skeleton\n"
+        "[ ] Java defaultCode uses 'class Solution' (NOT 'public class Solution')\n"
+        "[ ] driverCode starts with imports (import java.util.*; etc.) BEFORE {{USER_CODE}}\n"
         "[ ] driverCode contains {{USER_CODE}} with DOUBLE braces BEFORE the main block\n"
         "[ ] testCase input/output are space-separated strings ONLY (NO brackets, NO commas)\n"
+        "[ ] VERIFY: mentally run the correct solution with each testCase input through the driverCode — the output MUST exactly match the testCase output (same values, same order, same spacing)\n"
         "[ ] driverCode reads raw space-separated stdin directly using cin or Scanner\n"
         "[ ] NO regex or complex string parsing used in the driverCode\n"
         "[ ] All code strings are single-line — newlines encoded as \\n\n"
@@ -177,8 +180,8 @@ def build_questions_prompt(cv_analysis: dict, job_description: str = None) -> st
         '        },\n'
         '        {\n'
         '          "languageId": 62,\n'
-        '          "defaultCode": "import java.util.*;\\nimport java.io.*;\\n\\npublic class Solution {\\n    public List<Double> method(List<Double> data) {\\n        // Write your code here\\n        return new ArrayList<>();\\n    }\\n}",\n'
-        '          "driverCode": "{{USER_CODE}}\\npublic class Main {\\n    public static void main(String[] args) {\\n        Scanner sc = new Scanner(System.in); List<Double> data = new ArrayList<>();\\n        while(sc.hasNextDouble()) data.add(sc.nextDouble());\\n        List<Double> result = new Solution().method(data);\\n        for(int i=0; i<result.size(); i++) System.out.print(result.get(i) + (i==result.size()-1 ? \\\"\\\" : \\\" \\\")); System.out.println();\\n    }\\n}"\n'
+        '          "defaultCode": "import java.util.*;\\nimport java.io.*;\\n\\nclass Solution {\\n    public List<Double> method(List<Double> data) {\\n        // Write your code here\\n        return new ArrayList<>();\\n    }\\n}",\n'
+        '          "driverCode": "import java.util.*;\\nimport java.io.*;\\n{{USER_CODE}}\\npublic class Main {\\n    public static void main(String[] args) {\\n        Scanner sc = new Scanner(System.in); List<Double> data = new ArrayList<>();\\n        while(sc.hasNextDouble()) data.add(sc.nextDouble());\\n        List<Double> result = new Solution().method(data);\\n        for(int i=0; i<result.size(); i++) System.out.print(result.get(i) + (i==result.size()-1 ? \\\"\\\" : \\\" \\\")); System.out.println();\\n    }\\n}"\n'
         '        }\n'
         '      ]\n'
         '    }\n'
@@ -189,9 +192,12 @@ def build_questions_prompt(cv_analysis: dict, job_description: str = None) -> st
         "[ ] codingQuestions has exactly 2 items\n"
         "[ ] Each MCQ has exactly 1 isCorrect=true option\n"
         "[ ] defaultCode includes all common libraries/packages at the top, followed ONLY by the Solution class skeleton\n"
+        "[ ] Java defaultCode uses 'class Solution' (NOT 'public class Solution')\n"
+        "[ ] driverCode starts with imports BEFORE {{USER_CODE}} for Java\n"
         "[ ] driverCode contains {{USER_CODE}} with DOUBLE braces before main block\n"
         "[ ] testCase input/output are space-separated strings ONLY (NO brackets, NO commas)\n"
         "[ ] driverCode reads raw space-separated stdin directly using cin or Scanner\n"
+        "[ ] VERIFY: mentally run the correct solution with each testCase input through the driverCode — the output MUST exactly match the testCase output (same values, same order, same spacing)\n"
         "[ ] All code strings single-line with \\n for newlines\n"
         "[ ] Output is valid JSON — no markdown, no trailing commas\n"
     )
