@@ -72,7 +72,7 @@ def _generate_mcq(cv_analysis: dict, job_description: str, max_retries: int = 3)
                 if len(q.options) < 2:
                     raise ValueError(f"MCQ '{q.title}' must have at least 2 options")
 
-            logging.info("✅ MCQ generation successful")
+            logging.info("MCQ generation successful")
             return validated
 
         except (ValidationError, ValueError) as e:
@@ -108,15 +108,6 @@ def _generate_coding(cv_analysis: dict, job_description: str, max_retries: int =
 
             for q in validated:
                 for tmpl in q.templates:
-                    # Fix Java: remove 'public' from 'public class Solution' in defaultCode
-                    if tmpl.languageId == 62:
-                        if "public class Solution" in tmpl.defaultCode:
-                            logging.warning(f"Auto-fixed 'public class Solution' → 'class Solution' in '{q.title}' lang=62 defaultCode")
-                            tmpl.defaultCode = tmpl.defaultCode.replace("public class Solution", "class Solution")
-                        # Ensure driverCode has imports before {{USER_CODE}}
-                        if "{{USER_CODE}}" in tmpl.driverCode and not tmpl.driverCode.startswith("import"):
-                            logging.warning(f"Auto-added Java imports before {{{{USER_CODE}}}} in '{q.title}' lang=62 driverCode")
-                            tmpl.driverCode = "import java.util.*;\nimport java.io.*;\n" + tmpl.driverCode
 
                     if "{{USER_CODE}}" not in tmpl.driverCode:
                         if "{USER_CODE}" in tmpl.driverCode:
@@ -133,11 +124,6 @@ def _generate_coding(cv_analysis: dict, job_description: str, max_retries: int =
                                     'public class Program', '{{USER_CODE}}\n\npublic class Program', 1
                                 )
                                 logging.warning(f"Injected missing {{{{USER_CODE}}}} in '{q.title}' lang=51")
-                            elif tmpl.languageId == 62 and 'public class Main' in tmpl.driverCode:
-                                tmpl.driverCode = tmpl.driverCode.replace(
-                                    'public class Main', '{{USER_CODE}}\n\npublic class Main', 1
-                                )
-                                logging.warning(f"Injected missing {{{{USER_CODE}}}} in '{q.title}' lang=62")
                             else:
                                 raise ValueError(f"driverCode '{q.title}' lang={tmpl.languageId}: missing {{{{USER_CODE}}}}")
 
