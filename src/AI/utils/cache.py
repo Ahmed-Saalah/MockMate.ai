@@ -20,7 +20,7 @@ class TTLCache:
         self._store: dict[str, tuple[Any, float]] = {}   # key → (value, expires_at)
         self._lock = threading.Lock()
         self._max_size = max_size
-
+                                                                   
     def get(self, key: str) -> Optional[Any]:
         with self._lock:
             entry = self._store.get(key)
@@ -31,7 +31,7 @@ class TTLCache:
                 del self._store[key]
                 return None
             return value
-
+  
     def set(self, key: str, value: Any, ttl: int = 3600):
         with self._lock:
             if len(self._store) >= self._max_size:
@@ -58,6 +58,6 @@ class TTLCache:
             now = time.time()
             alive = sum(1 for _, exp in self._store.values() if exp > now)
             return {"total": len(self._store), "alive": alive, "max_size": self._max_size}
-
+                                                                                                
 
 cache = TTLCache(max_size=512)
