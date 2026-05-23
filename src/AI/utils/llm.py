@@ -4,7 +4,6 @@ LLM Utility — Production-grade Gemini wrapper
 Key improvements over the original:
  - SmartKeyManager: per-key cooldown + circuit breaker + LRU selection
  - No more Retry Storm: failed key is cooled-down before reuse
- - Cache layer: identical prompts skip the API entirely
  - Correct retry-after parsing from 429 error messages
  - Hard timeout per attempt via daemon thread (unchanged behaviour)
  - All public function signatures preserved (analyze_resume / analyze_content / analyze_feedback)
@@ -23,7 +22,6 @@ import json_repair
 
 from core.config import Config
 from utils.key_manager import SmartKeyManager
-from utils.cache import cache
 
 
 _key_manager = SmartKeyManager(Config.GEMINI_API_KEYS)
@@ -90,15 +88,7 @@ def _parse_retry_after(error_str: str) -> Optional[int]:
 
 
 
-def call_llm(prompt: str, config: dict, label: str, use_cache: bool = True) -> Dict:
-    cache_key = None
-    if use_cache:
-        cache_key = cache.make_key(label, prompt[:2000], str(config.get("max_output_tokens")))
-        cached = cache.get(cache_key)
-        if cached is not None:
-            logging.info(f"[Cache] HIT for {label} — skipping Gemini API call")
-            return cached
-
+def call_llm(prompt: str, config: dict, label: str) -> Dict:
     raw_config = {k: v for k, v in config.items() if k != "thinking_config"}
     thinking_budget = config.get("thinking_config", {}).get("thinking_budget", None)
     if thinking_budget is not None:
@@ -170,10 +160,6 @@ def call_llm(prompt: str, config: dict, label: str, use_cache: bool = True) -> D
             _key_manager.mark_success(api_key)
             logging.info(f"[{label}]  Success on attempt {attempt+1}")
 
-            if use_cache and cache_key:
-                ttl = 7200 if "CV" in label else 3600
-                cache.set(cache_key, parsed, ttl=ttl)
-
             return parsed
 
         except (ResourceExhausted, TooManyRequests) as e:
@@ -224,15 +210,15 @@ def call_llm(prompt: str, config: dict, label: str, use_cache: bool = True) -> D
 
 
 def analyze_resume(prompt: str) -> Dict:
-    return call_llm(prompt, Config.CV_GENERATION_CONFIG, "CV Analysis", use_cache=True)
+    return call_llm(prompt, Config.CV_GENERATION_CONFIG, "CV Analysis")
 
 
 def analyze_content(prompt: str) -> Dict:
-    return call_llm(prompt, Config.QUESTIONS_GENERATION_CONFIG, "Questions Generation", use_cache=True)
+    return call_llm(prompt, Config.QUESTIONS_GENERATION_CONFIG, "Questions Generation")
 
 
 def analyze_feedback(prompt: str) -> Dict:
-    return call_llm(prompt, Config.FEEDBACK_GENERATION_CONFIG, "Feedback Analysis", use_cache=False)
+    return call_llm(prompt, Config.FEEDBACK_GENERATION_CONFIG, "Feedback Analysis")
 
 
 def get_key_manager() -> SmartKeyManager:

@@ -6,7 +6,6 @@ from api.routers import cv, feedback
 from api.routers.questions_full import router as questions_full_router
 from api.routers.voice_interview import router as voice_interview_router
 from utils.llm import get_key_manager
-from utils.cache import cache
 
 logging.basicConfig(
     level=logging.INFO,
@@ -23,12 +22,11 @@ def root():
 
 @app.get("/health", tags=["System"])
 def health():
-    """Key manager status + cache stats — useful for monitoring."""
+    """Key manager status — useful for monitoring."""
     km = get_key_manager()
     return JSONResponse({
         "status": "ok",
         "keys": km.status(),
-        "cache": cache.stats(),
     })
 
 

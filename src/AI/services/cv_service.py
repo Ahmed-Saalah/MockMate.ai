@@ -2,7 +2,6 @@ import logging
 
 from prompts.cv import build_prompt
 from utils.llm import analyze_resume
-from utils.cache import cache
 from schemas.cv import validate_cv_output, ResumeAnalysis
 from pydantic import ValidationError
 
@@ -12,12 +11,6 @@ def run_resume_analysis(cv_text: str, job_description: str) -> dict:
         logging.warning("CV text is empty. Proceeding with job_description only.")
 
     cv_text = cv_text[:15000]
-
-    ck = cache.make_key("cv_analysis", cv_text[:500], job_description[:200])
-    cached = cache.get(ck)
-    if cached is not None:
-        logging.info("CV analysis served from cache")
-        return cached
 
     prompt = build_prompt(cv_text, job_description)
     MAX_RETRIES = 3
@@ -30,7 +23,6 @@ def run_resume_analysis(cv_text: str, job_description: str) -> dict:
             validated = ResumeAnalysis(**response)
             result = validated.dict()
             logging.info("CV analysis successful")
-            cache.set(ck, result, ttl=7200)
             return result
 
         except (ValidationError, ValueError) as e:

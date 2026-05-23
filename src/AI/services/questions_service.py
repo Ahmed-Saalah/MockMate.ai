@@ -4,7 +4,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 from prompts.questions import build_mcq_prompt, build_coding_prompt, build_questions_prompt
 from utils.llm import analyze_content
-from utils.cache import cache
 from schemas.questions import InterviewQuestions, MCQQuestion, CodingQuestion
 from pydantic import ValidationError
 
@@ -52,14 +51,6 @@ def validate_questions(data: InterviewQuestions) -> InterviewQuestions:
 
 def _generate_mcq(cv_analysis: dict, job_description: str, max_retries: int = 3) -> list:
     """Generate 8 MCQ questions — runs in a thread."""
-    # Cache: same cv+jd → same MCQs
-    ck = cache.make_key("mcq", str(cv_analysis.get("track_name")),
-                         str(cv_analysis.get("level")), str(job_description)[:200])
-    cached = cache.get(ck)
-    if cached is not None:
-        logging.info("MCQ served from cache")
-        return [MCQQuestion(**q) for q in cached]
-
     prompt = build_mcq_prompt(cv_analysis, job_description)
     current_prompt = prompt
 
@@ -81,8 +72,7 @@ def _generate_mcq(cv_analysis: dict, job_description: str, max_retries: int = 3)
                 if len(q.options) < 2:
                     raise ValueError(f"MCQ '{q.title}' must have at least 2 options")
 
-            logging.info("✅ MCQ generation successful")
-            cache.set(ck, [q.model_dump() for q in validated], ttl=3600)
+            logging.info("MCQ generation successful")
             return validated
 
         except (ValidationError, ValueError) as e:
@@ -102,13 +92,6 @@ def _generate_mcq(cv_analysis: dict, job_description: str, max_retries: int = 3)
 
 def _generate_coding(cv_analysis: dict, job_description: str, max_retries: int = 5) -> list:
     """Generate 2 coding questions — runs in a thread."""
-    ck = cache.make_key("coding", str(cv_analysis.get("track_name")),
-                         str(cv_analysis.get("level")), str(job_description)[:200])
-    cached = cache.get(ck)
-    if cached is not None:
-        logging.info("Coding questions served from cache")
-        return [CodingQuestion(**q) for q in cached]
-
     prompt = build_coding_prompt(cv_analysis, job_description)
     current_prompt = prompt
 
@@ -125,6 +108,7 @@ def _generate_coding(cv_analysis: dict, job_description: str, max_retries: int =
 
             for q in validated:
                 for tmpl in q.templates:
+
                     if "{{USER_CODE}}" not in tmpl.driverCode:
                         if "{USER_CODE}" in tmpl.driverCode:
                             logging.warning(f"Auto-fixed single-brace USER_CODE in '{q.title}' lang={tmpl.languageId}")
@@ -149,7 +133,6 @@ def _generate_coding(cv_analysis: dict, job_description: str, max_retries: int =
                                 tmpl.driverCode = tmpl.driverCode.replace(bad, 'if __name__ == "__main__":')
 
             logging.info("Coding generation successful")
-            cache.set(ck, [q.model_dump() for q in validated], ttl=3600)
             return validated
 
         except (ValidationError, ValueError) as e:
