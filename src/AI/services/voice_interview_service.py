@@ -69,7 +69,7 @@ async def create_chat_session(track: str) -> tuple:
     """
     client = genai.Client(api_key=Config.GEMINI_API_KEY)
     session = client.aio.chats.create(
-        model=Config.MODEL_NAME,
+        model=Config.VOICE_MODEL,
         config=_make_config(
             Config.VOICE_GENERATION_CONFIG,
             system_instruction=build_system_prompt(track),
@@ -157,7 +157,7 @@ async def evaluate_and_close(
         full_prompt = f"INTERVIEW TRANSCRIPT:\n{history_text}\n\n{EVALUATION_PROMPT}"
 
         response = await client.aio.models.generate_content(
-            model=Config.MODEL_NAME,
+            model=Config.VOICE_EVAL_MODEL,
             contents=full_prompt,
             config=_make_config(Config.VOICE_EVALUATION_CONFIG),
         )

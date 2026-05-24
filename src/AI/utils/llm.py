@@ -63,7 +63,7 @@ def safe_json_load(text: str) -> Dict:
         raise ValueError(f"Could not parse JSON after all repair attempts: {e2}") from e2
 
 
-def call_llm(prompt: str, config: dict, label: str) -> Dict:
+def call_llm(prompt: str, config: dict, label: str, model: str) -> Dict:
     raw_config = {k: v for k, v in config.items() if k != "thinking_config"}
     thinking_budget = config.get("thinking_config", {}).get("thinking_budget", None)
     if thinking_budget is not None:
@@ -87,7 +87,7 @@ def call_llm(prompt: str, config: dict, label: str) -> Dict:
             def _call():
                 try:
                     resp = client.models.generate_content(
-                        model=Config.MODEL_NAME,
+                        model=model,
                         contents=current_prompt,
                         config=generate_config,
                     )
@@ -162,12 +162,12 @@ def call_llm(prompt: str, config: dict, label: str) -> Dict:
 
 
 def analyze_resume(prompt: str) -> Dict:
-    return call_llm(prompt, Config.CV_GENERATION_CONFIG, "CV Analysis")
+    return call_llm(prompt, Config.CV_GENERATION_CONFIG, "CV Analysis", Config.CV_MODEL)
 
 
 def analyze_content(prompt: str) -> Dict:
-    return call_llm(prompt, Config.QUESTIONS_GENERATION_CONFIG, "Questions Generation")
+    return call_llm(prompt, Config.QUESTIONS_GENERATION_CONFIG, "Questions Generation", Config.QUESTIONS_MODEL)
 
 
 def analyze_feedback(prompt: str) -> Dict:
-    return call_llm(prompt, Config.FEEDBACK_GENERATION_CONFIG, "Feedback Analysis")
+    return call_llm(prompt, Config.FEEDBACK_GENERATION_CONFIG, "Feedback Analysis", Config.FEEDBACK_MODEL)
