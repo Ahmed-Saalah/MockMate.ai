@@ -1,19 +1,12 @@
 """
-LLM Utility — Production-grade Gemini wrapper
-
-Key improvements over the original:
- - SmartKeyManager: per-key cooldown + circuit breaker + LRU selection
- - No more Retry Storm: failed key is cooled-down before reuse
- - Correct retry-after parsing from 429 error messages
- - Hard timeout per attempt via daemon thread (unchanged behaviour)
- - All public function signatures preserved (analyze_resume / analyze_content / analyze_feedback)
+LLM Utility — Gemini wrapper (single API key)
 """
 import json
 import logging
 import re
 import threading
 import time
-from typing import Dict, Optional
+from typing import Dict
 
 from google import genai
 from google.api_core.exceptions import ResourceExhausted, TooManyRequests
@@ -21,10 +14,7 @@ from google.genai import types as genai_types
 import json_repair
 
 from core.config import Config
-from utils.key_manager import SmartKeyManager
 
-
-_key_manager = SmartKeyManager(Config.GEMINI_API_KEYS)
 
 def repair_json_string(text: str) -> str:
     text = re.sub(r"```(?:json)?\s*", "", text).strip()
@@ -73,47 +63,23 @@ def safe_json_load(text: str) -> Dict:
         raise ValueError(f"Could not parse JSON after all repair attempts: {e2}") from e2
 
 
-def _parse_retry_after(error_str: str) -> Optional[int]:
-    patterns = [
-        r"retryDelay.*?['\"](\d+)s['\"]",
-        r"retry.delay.*?seconds.*?(\d+)",
-        r"Retry after (\d+) second",
-        r"retry_after[\":\s]+(\d+)",
-    ]
-    for pat in patterns:
-        m = re.search(pat, error_str, re.IGNORECASE)
-        if m:
-            return int(m.group(1)) + 2
-    return None
-
-
-
-def call_llm(prompt: str, config: dict, label: str) -> Dict:
+def call_llm(prompt: str, config: dict, label: str, model: str) -> Dict:
     raw_config = {k: v for k, v in config.items() if k != "thinking_config"}
     thinking_budget = config.get("thinking_config", {}).get("thinking_budget", None)
     if thinking_budget is not None:
         raw_config["thinking_config"] = genai_types.ThinkingConfig(thinking_budget=thinking_budget)
     generate_config = genai_types.GenerateContentConfig(**raw_config)
 
-    MAX_ATTEMPTS = max(len(Config.GEMINI_API_KEYS) * 2, 6)
+    MAX_ATTEMPTS = 6
     TIMEOUT = Config.LLM_TIMEOUT_SECONDS
     current_prompt = prompt
     json_hint_added = False
 
-    for attempt in range(MAX_ATTEMPTS):
-        api_key = _key_manager.get_available_key()
-        if api_key is None:
-            wait = min(_key_manager.seconds_until_available(), 30)
-            logging.warning(f"[{label}] No key available — waiting {wait:.1f}s (attempt {attempt+1})")
-            time.sleep(wait)
-            api_key = _key_manager.get_available_key()
-            if api_key is None:
-                logging.error(f"[{label}] Still no key available — skipping attempt {attempt+1}")
-                continue
+    client = genai.Client(api_key=Config.GEMINI_API_KEY)
 
+    for attempt in range(MAX_ATTEMPTS):
         try:
-            client = genai.Client(api_key=api_key)
-            logging.info(f"[{label}] Attempt {attempt+1}/{MAX_ATTEMPTS} — key ...{api_key[-6:]}")
+            logging.info(f"[{label}] Attempt {attempt+1}/{MAX_ATTEMPTS}")
 
             result_holder: Dict = {}
             error_holder: Dict = {}
@@ -121,7 +87,7 @@ def call_llm(prompt: str, config: dict, label: str) -> Dict:
             def _call():
                 try:
                     resp = client.models.generate_content(
-                        model=Config.MODEL_NAME,
+                        model=model,
                         contents=current_prompt,
                         config=generate_config,
                     )
@@ -135,7 +101,6 @@ def call_llm(prompt: str, config: dict, label: str) -> Dict:
 
             if thread.is_alive():
                 logging.warning(f"[{label}] Attempt {attempt+1} timed out after {TIMEOUT}s")
-                _key_manager.mark_server_error(api_key)
                 continue
 
             if "error" in error_holder:
@@ -157,23 +122,16 @@ def call_llm(prompt: str, config: dict, label: str) -> Dict:
                 else:
                     raise ValueError("Parsed JSON is a list, expected a dict")
 
-            _key_manager.mark_success(api_key)
-            logging.info(f"[{label}]  Success on attempt {attempt+1}")
-
+            logging.info(f"[{label}] Success on attempt {attempt+1}")
             return parsed
 
         except (ResourceExhausted, TooManyRequests) as e:
-            retry_after = _parse_retry_after(str(e))
-            logging.warning(
-                f"[{label}] Rate limit on attempt {attempt+1} "
-                f"— key ...{api_key[-6:]} cooldown={retry_after}s"
-            )
-            _key_manager.mark_rate_limited(api_key, retry_after)
+            logging.warning(f"[{label}] Rate limit on attempt {attempt+1}: {e}")
+            time.sleep(65)
             continue
 
         except ValueError as e:
             logging.warning(f"[{label}] JSON issue on attempt {attempt+1}: {e}")
-            _key_manager.mark_success(api_key)
             if not json_hint_added:
                 current_prompt += (
                     "\n\nREMINDER: Your previous response could not be parsed as JSON. "
@@ -187,22 +145,16 @@ def call_llm(prompt: str, config: dict, label: str) -> Dict:
             error_str = str(e)
 
             if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
-                retry_after = _parse_retry_after(error_str)
-                logging.warning(
-                    f"[{label}] Quota exceeded on attempt {attempt+1} "
-                    f"— cooldown={retry_after}s"
-                )
-                _key_manager.mark_rate_limited(api_key, retry_after)
+                logging.warning(f"[{label}] Quota exceeded on attempt {attempt+1}")
+                time.sleep(65)
                 continue
 
             if "503" in error_str or "unavailable" in error_str.lower():
                 logging.warning(f"[{label}] Server busy on attempt {attempt+1}")
-                _key_manager.mark_server_error(api_key)
                 time.sleep(3)
                 continue
 
             logging.error(f"[{label}] Unexpected error on attempt {attempt+1}: {e}")
-            _key_manager.mark_server_error(api_key)
             time.sleep(1)
             continue
 
@@ -210,16 +162,12 @@ def call_llm(prompt: str, config: dict, label: str) -> Dict:
 
 
 def analyze_resume(prompt: str) -> Dict:
-    return call_llm(prompt, Config.CV_GENERATION_CONFIG, "CV Analysis")
+    return call_llm(prompt, Config.CV_GENERATION_CONFIG, "CV Analysis", Config.CV_MODEL)
 
 
 def analyze_content(prompt: str) -> Dict:
-    return call_llm(prompt, Config.QUESTIONS_GENERATION_CONFIG, "Questions Generation")
+    return call_llm(prompt, Config.QUESTIONS_GENERATION_CONFIG, "Questions Generation", Config.QUESTIONS_MODEL)
 
 
 def analyze_feedback(prompt: str) -> Dict:
-    return call_llm(prompt, Config.FEEDBACK_GENERATION_CONFIG, "Feedback Analysis")
-
-
-def get_key_manager() -> SmartKeyManager:
-    return _key_manager
+    return call_llm(prompt, Config.FEEDBACK_GENERATION_CONFIG, "Feedback Analysis", Config.FEEDBACK_MODEL)

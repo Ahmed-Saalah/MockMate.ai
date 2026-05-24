@@ -6,17 +6,13 @@ load_dotenv()
 
 class Config:
 
-    GEMINI_API_KEYS = [
-        os.getenv("GEMINI_API_KEY_1"),
-        os.getenv("GEMINI_API_KEY_2"),
-        os.getenv("GEMINI_API_KEY_3"),
-        os.getenv("GEMINI_API_KEY_4"),
-        os.getenv("GEMINI_API_KEY_5"),
-        os.getenv("GEMINI_API_KEY_6"),
-    ]
-    GEMINI_API_KEYS = [k for k in GEMINI_API_KEYS if k]
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-    MODEL_NAME = "gemini-2.5-flash"
+    CV_MODEL          = "gemini-2.5-flash"
+    QUESTIONS_MODEL   = "gemini-2.5-pro"
+    FEEDBACK_MODEL    = "gemini-2.5-flash"
+    VOICE_MODEL       = "gemini-2.5-flash"
+    VOICE_EVAL_MODEL  = "gemini-2.5-flash"
 
     LLM_TIMEOUT_SECONDS = 90
 
@@ -44,17 +40,15 @@ class Config:
         "thinking_config": {"thinking_budget": 1024},
     }
 
-    
     VOICE_GENERATION_CONFIG = {
         "temperature": 0.7,
         "top_p": 0.9,
         "top_k": 40,
         "max_output_tokens": 256,
         "candidate_count": 1,
-        "thinking_config": {"thinking_budget": 0},  
+        "thinking_config": {"thinking_budget": 0},
     }
 
-   
     VOICE_EVALUATION_CONFIG = {
         "response_mime_type": "application/json",
         "temperature": 0.2,
@@ -62,6 +56,5 @@ class Config:
         "max_output_tokens": 1024,
         "thinking_config": {"thinking_budget": 0},
     }
-
 
     VOICE_MAX_USER_INPUT = 2000
