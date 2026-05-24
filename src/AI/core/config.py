@@ -9,8 +9,8 @@ class Config:
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
     CV_MODEL          = "gemini-2.5-flash"
-    QUESTIONS_MODEL   = "gemini-2.5-flash"
-    FEEDBACK_MODEL    = "gemini-2.5-flash"
+    QUESTIONS_MODEL   = "gemini-2.5-pro"
+    FEEDBACK_MODEL    = "gemini-2.5-pro"
     VOICE_MODEL       = "gemini-2.5-flash"
     VOICE_EVAL_MODEL  = "gemini-2.5-flash"
 
