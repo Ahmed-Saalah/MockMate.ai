@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Reflection;
 using MockMate.Api.Common.Results;
 using HttpResults = Microsoft.AspNetCore.Http.Results;
@@ -28,6 +28,14 @@ public static class HttpHelper
             HttpStatusCode.Forbidden => HttpResults.Json(
                 result?.Error,
                 statusCode: StatusCodes.Status403Forbidden
+            ),
+            HttpStatusCode.TooManyRequests => HttpResults.Json(
+                result?.Error,
+                statusCode: StatusCodes.Status429TooManyRequests
+            ),
+            HttpStatusCode.ServiceUnavailable => HttpResults.Json(
+                result?.Error,
+                statusCode: StatusCodes.Status503ServiceUnavailable
             ),
             _ => HttpResults.BadRequest(result?.Error),
         };
