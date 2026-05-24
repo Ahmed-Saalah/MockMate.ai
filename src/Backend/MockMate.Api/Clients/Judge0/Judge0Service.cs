@@ -88,13 +88,15 @@ public sealed class Judge0Service(HttpClient httpClient) : IJudge0Service
                     }
                     else
                     {
-                        alignedResults.Add(new Judge0SubmissionResult
-                        {
-                            Status = new Judge0Status(
-                                13,
-                                "Execution Engine Error: Missing Result"
-                            )
-                        });
+                        alignedResults.Add(
+                            new Judge0SubmissionResult
+                            {
+                                Status = new Judge0Status(
+                                    13,
+                                    "Execution Engine Error: Missing Result"
+                                ),
+                            }
+                        );
                     }
                 }
                 return alignedResults;
@@ -102,12 +104,14 @@ public sealed class Judge0Service(HttpClient httpClient) : IJudge0Service
 
             return results;
         }
-        catch (Exception ex) when (ex is HttpRequestException or JsonException or OperationCanceledException)
+        catch (Exception ex)
+            when (ex is HttpRequestException or JsonException or OperationCanceledException)
         {
             string errorMessage = ex switch
             {
                 OperationCanceledException => "Code execution timed out. Please try again.",
-                _ => "Unable to connect to the code execution engine. Please check your internet connection and try again."
+                _ =>
+                    "Unable to connect to the code execution engine. Please check your internet connection and try again.",
             };
 
             throw new Judge0ServiceException(errorMessage, ex);
@@ -170,7 +174,8 @@ public sealed class Judge0Service(HttpClient httpClient) : IJudge0Service
 
                 consecutiveFailures = 0; // Reset on successful fetch
             }
-            catch (Exception ex) when (ex is HttpRequestException or JsonException or OperationCanceledException)
+            catch (Exception ex)
+                when (ex is HttpRequestException or JsonException or OperationCanceledException)
             {
                 consecutiveFailures++;
                 if (consecutiveFailures > maxConsecutiveFailures)
@@ -178,7 +183,8 @@ public sealed class Judge0Service(HttpClient httpClient) : IJudge0Service
                     string msg = ex switch
                     {
                         OperationCanceledException => "Polling timed out. Please try again.",
-                        _ => "Unable to retrieve execution results. Please check your network and try again."
+                        _ =>
+                            "Unable to retrieve execution results. Please check your network and try again.",
                     };
                     throw new Judge0ServiceException(msg, ex);
                 }
