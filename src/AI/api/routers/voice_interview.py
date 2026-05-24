@@ -50,7 +50,7 @@ async def voice_interview_endpoint(websocket: WebSocket):
         logger.info(f"Interview track: {track}")
 
         # ── 3. Create session and open the interview ───────────────────────
-        chat_session, client, api_key = await create_chat_session(track)
+        chat_session, client = await create_chat_session(track)
 
         # Manual history — owns the transcript independently of the SDK
         history: list[str] = []
@@ -58,7 +58,7 @@ async def voice_interview_endpoint(websocket: WebSocket):
         # Opening is an internal prompt, not a real user turn
         await stream_ai_response(
             build_opening_prompt(track),
-            websocket, chat_session, api_key, history,
+            websocket, chat_session, history,
             record_user_turn=False,
         )
 
@@ -79,11 +79,11 @@ async def voice_interview_endpoint(websocket: WebSocket):
                     logger.debug("Empty user_speech — skipping.")
                     continue
                 logger.info(f"User: {text[:120]}")
-                await stream_ai_response(text, websocket, chat_session, api_key, history)
+                await stream_ai_response(text, websocket, chat_session, history)
 
             elif event == "end_interview":
                 logger.info(f"End interview — {len(history)} turns recorded.")
-                await evaluate_and_close(websocket, client, api_key, history)
+                await evaluate_and_close(websocket, client, history)
                 break
 
             else:
