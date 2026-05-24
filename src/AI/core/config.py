@@ -43,3 +43,25 @@ class Config:
         "max_output_tokens": 6000,
         "thinking_config": {"thinking_budget": 1024},
     }
+
+    
+    VOICE_GENERATION_CONFIG = {
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "top_k": 40,
+        "max_output_tokens": 256,
+        "candidate_count": 1,
+        "thinking_config": {"thinking_budget": 0},  
+    }
+
+   
+    VOICE_EVALUATION_CONFIG = {
+        "response_mime_type": "application/json",
+        "temperature": 0.2,
+        "top_p": 0.9,
+        "max_output_tokens": 1024,
+        "thinking_config": {"thinking_budget": 0},
+    }
+
+
+    VOICE_MAX_USER_INPUT = 2000
