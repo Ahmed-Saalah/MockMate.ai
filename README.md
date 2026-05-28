@@ -55,7 +55,7 @@ graph TD
     
     subgraph AIService ["Python AI Service"]
         FastAPI["FastAPI"]
-        GenAI["Gemini Flash"]
+        GenAI["Gemini"]
         WS["WebSocket Manager"]
         PDF["PDF Extractor"]
     end
@@ -132,7 +132,7 @@ sequenceDiagram
 
 ### AI Service (Python)
 - **Framework**: Python 3.12, FastAPI, Uvicorn (ASGI)
-- **AI/LLM**: Google Gemini (via `google-generativeai`)
+- **AI/LLM**: Google Gemini (via `google-genai`)
 - **Real-Time**: WebSockets for low-latency streaming
 - **PDF Processing**: `pdfplumber`, `pdfminer.six`
 - **Validation**: Pydantic v2
@@ -232,7 +232,7 @@ pip install -r requirements.txt
 **Configure Environment Variables:**
 Create a `.env` file in the `src/AI` directory and add your Gemini API key:
 ```env
-GEMINI_API_KEY_1="your_gemini_api_key_here"
+GEMINI_API_KEY="your_gemini_api_key_here"
 ```
 
 **Start the development server:**
