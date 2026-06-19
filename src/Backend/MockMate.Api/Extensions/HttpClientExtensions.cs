@@ -25,7 +25,7 @@ public static class HttpClientExtensions
             }
 
             client.BaseAddress = new Uri(url);
-            client.Timeout = TimeSpan.FromMinutes(1);
+            client.Timeout = TimeSpan.FromMinutes(3);
         });
 
         services.AddHttpClient<IJudge0Service, Judge0Service>(client =>
