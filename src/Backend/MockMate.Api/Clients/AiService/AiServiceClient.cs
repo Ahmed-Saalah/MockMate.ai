@@ -102,9 +102,8 @@ public class AiServiceClient(HttpClient httpClient, ILogger<AiServiceClient> log
             var jobDescContent = new StringContent(request.JobDescription ?? string.Empty);
             content.Add(jobDescContent, "job_description");
 
-            // Custom timeout of 60 seconds for this long-running generation request
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            cts.CancelAfter(TimeSpan.FromSeconds(60));
+            cts.CancelAfter(TimeSpan.FromSeconds(180));
 
             var response = await httpClient.PostAsync("/interview/full", content, cts.Token);
 
