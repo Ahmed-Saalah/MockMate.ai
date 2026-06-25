@@ -7,6 +7,7 @@ load_dotenv()
 class Config:
 
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    print(f"DEBUG: The API key loaded is: {GEMINI_API_KEY[:5] if GEMINI_API_KEY else 'NONE!'}...")
 
     CV_MODEL          = "gemini-2.5-flash"
     QUESTIONS_MODEL   = "gemini-2.5-pro"
