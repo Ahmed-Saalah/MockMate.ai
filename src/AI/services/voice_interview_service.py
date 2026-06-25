@@ -50,6 +50,12 @@ def _strip_markdown_fences(text: str) -> str:
     return text.strip()
 
 
+# def _clean_for_tts(text: str) -> str:
+#     """Strip markdown characters that might trip up the TTS engine."""
+#     text = text.replace("*", "").replace("_", "").replace("#", "")
+#     return text.strip()
+
+
 def _make_config(raw: dict, **extra) -> types.GenerateContentConfig:
     """Convert a Config dict to GenerateContentConfig, merging any extra kwargs."""
     kwargs = {k: v for k, v in raw.items() if k != "thinking_config"}
@@ -105,11 +111,11 @@ async def stream_ai_response(
             ai_response += text
             buffer, sentences = _flush_sentence(buffer)
             for sentence in sentences:
-                await websocket.send_json({"event": "ai_sentence", "text": sentence})
+                await websocket.send_json({"event": "ai_sentence", "text": _clean_for_tts(sentence)})
 
         # Flush any trailing text after the stream ends
         if buffer.strip():
-            await websocket.send_json({"event": "ai_sentence", "text": buffer.strip()})
+            await websocket.send_json({"event": "ai_sentence", "text": _clean_for_tts(buffer.strip())})
             ai_response += buffer
 
         await websocket.send_json({"event": "ai_turn_complete"})
