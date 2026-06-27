@@ -1,12 +1,10 @@
 import logging
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-
 from prompts.questions import build_mcq_prompt, build_coding_prompt, build_questions_prompt
 from utils.llm import analyze_content
 from schemas.questions import InterviewQuestions, MCQQuestion, CodingQuestion
 from pydantic import ValidationError
-
 
 
 def validate_questions(data: InterviewQuestions) -> InterviewQuestions:

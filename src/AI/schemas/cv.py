@@ -31,7 +31,6 @@ def validate_cv_output(data: dict) -> dict:
     if not isinstance(data.get("technical_skills"), list):
         data["technical_skills"] = []
 
-    # Remove duplicates while preserving order
     data["technical_skills"] = list(dict.fromkeys(data["technical_skills"]))
 
     return data

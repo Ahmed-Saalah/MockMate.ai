@@ -20,11 +20,8 @@ from prompts.voice_interview import (
 
 logger = logging.getLogger(__name__)
 
-# Matches the position right after . ? ! — used to split sentences.
 _SENTENCE_END = re.compile(r'(?<=[.?!])(?:\s+|$)')
 
-
-# ── Helpers ────────────────────────────────────────────────────────────────────
 
 def _flush_sentence(buffer: str) -> tuple[str, list[str]]:
     """
@@ -45,15 +42,19 @@ def _flush_sentence(buffer: str) -> tuple[str, list[str]]:
 
 
 def _strip_markdown_fences(text: str) -> str:
+    start = text.find('{')
+    end = text.rfind('}')
+    if start != -1 and end != -1 and end >= start:
+        return text[start:end+1]
     text = re.sub(r"^```(?:json)?\s*", "", text)
     text = re.sub(r"\s*```$", "", text)
     return text.strip()
 
 
-# def _clean_for_tts(text: str) -> str:
-#     """Strip markdown characters that might trip up the TTS engine."""
-#     text = text.replace("*", "").replace("_", "").replace("#", "")
-#     return text.strip()
+def _clean_for_tts(text: str) -> str:
+    """Strip markdown characters that might trip up the TTS engine."""
+    text = text.replace("*", "").replace("_", "").replace("#", "")
+    return text.strip()
 
 
 def _make_config(raw: dict, **extra) -> types.GenerateContentConfig:
@@ -65,8 +66,6 @@ def _make_config(raw: dict, **extra) -> types.GenerateContentConfig:
     kwargs.update(extra)
     return types.GenerateContentConfig(**kwargs)
 
-
-# ── Session factory ────────────────────────────────────────────────────────────
 
 async def create_chat_session(track: str) -> tuple:
     """
@@ -84,8 +83,6 @@ async def create_chat_session(track: str) -> tuple:
     logger.info("Gemini chat session created.")
     return session, client
 
-
-# ── Streaming ──────────────────────────────────────────────────────────────────
 
 async def stream_ai_response(
     user_text: str,
@@ -113,7 +110,6 @@ async def stream_ai_response(
             for sentence in sentences:
                 await websocket.send_json({"event": "ai_sentence", "text": _clean_for_tts(sentence)})
 
-        # Flush any trailing text after the stream ends
         if buffer.strip():
             await websocket.send_json({"event": "ai_sentence", "text": _clean_for_tts(buffer.strip())})
             ai_response += buffer
@@ -137,8 +133,6 @@ async def stream_ai_response(
             "text": "I encountered an error. Please repeat your last answer.",
         })
 
-
-# ── Evaluation ─────────────────────────────────────────────────────────────────
 
 _EMPTY_FEEDBACK = {
     "overallSummary": "Evaluation could not be generated. Please try again.",
