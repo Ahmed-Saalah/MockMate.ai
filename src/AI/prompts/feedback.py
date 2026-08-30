@@ -3,7 +3,6 @@ import json
 def build_feedback_prompt(interview_data):
    
     data = json.dumps(interview_data, indent=2)
-
   
     prompt = f"""
 You are a friendly but expert Technical Mentor. Your task is to provide feedback that is simple to understand, encouraging, and highly professional.
