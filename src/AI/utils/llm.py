@@ -1,6 +1,3 @@
-"""
-LLM Utility — Gemini wrapper (single API key)
-"""
 import json
 import logging
 import re
@@ -80,7 +77,6 @@ def call_llm(prompt: str, config: dict, label: str, model: str) -> Dict:
     for attempt in range(MAX_ATTEMPTS):
         try:
             logging.info(f"[{label}] Attempt {attempt+1}/{MAX_ATTEMPTS}")
-
             result_holder: Dict = {}
             error_holder: Dict = {}
 
