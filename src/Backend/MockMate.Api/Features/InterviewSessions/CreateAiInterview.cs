@@ -65,7 +65,6 @@ public sealed class CreateAiInterview
             var detectedTrack = aiResponse.TrackName.ToLower().Trim();
             var detectedLevel = aiResponse.SeniorityLevel;
 
-            // 1. Upsert Track
             var track = await context
                 .Tracks.Include(t => t.Skills)
                 .FirstOrDefaultAsync(t => t.Name.ToLower() == detectedTrack, cancellationToken);
@@ -75,7 +74,6 @@ public sealed class CreateAiInterview
                 context.Tracks.Add(track);
             }
 
-            // 2. Upsert Skills
             var dbSkills = new List<Skill>();
             foreach (var rawSkill in aiResponse.DetectedSkills)
             {
@@ -99,7 +97,6 @@ public sealed class CreateAiInterview
                 }
             }
 
-            // Save new track and skills to resolve IDs before assigning them
             await context.SaveChangesAsync(cancellationToken);
 
             // Ensure the track is associated with the skills
@@ -111,7 +108,6 @@ public sealed class CreateAiInterview
                 }
             }
 
-            // 3. Deduplicate & Map Questions
             var mcqQuestions = new List<CreateInterview.McqQuestionDto>();
             var mcqQuestionEntities = new List<Question>();
             foreach (var q in aiResponse.McqQuestions)
@@ -216,10 +212,8 @@ public sealed class CreateAiInterview
                 codingQuestionEntities.Add(targetQ);
             }
 
-            // Save new questions to generate IDs
             await context.SaveChangesAsync(cancellationToken);
 
-            // Populate Response DTOs
             foreach (var q in mcqQuestionEntities)
             {
                 mcqQuestions.Add(
@@ -256,13 +250,12 @@ public sealed class CreateAiInterview
                 );
             }
 
-            // 4. Create Session
             var session = new InterviewSession
             {
                 UserId = request.UserId,
                 TrackName = aiResponse.TrackName,
                 SeniorityLevel = aiResponse.SeniorityLevel,
-		InterviewType = InterviewTypes.AiGenerated,
+		        InterviewType = InterviewTypes.AiGenerated,
                 StartDate = DateTime.UtcNow,
                 Answers = mcqQuestionEntities
                     .Select(q => new SessionAnswer { QuestionId = q.Id })

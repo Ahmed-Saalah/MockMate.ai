@@ -14,7 +14,7 @@ async def generate_full_interview(
     job_description: str = Form(...)
 ):
     try:
-        logging.info("📥 Starting Full Interview Generation...")
+        logging.info("Starting Full Interview Generation...")
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             content = await cv_file.read()
             tmp.write(content)
